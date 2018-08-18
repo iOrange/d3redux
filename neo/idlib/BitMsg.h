@@ -441,8 +441,8 @@ public:
 					idBitMsgDelta();
 					~idBitMsgDelta() {}
 
-	void			Init( const idBitMsg *base, idBitMsg *newBase, idBitMsg *delta );
-	void			Init( const idBitMsg *base, idBitMsg *newBase, const idBitMsg *delta );
+	void			Init( const idBitMsg *_base, idBitMsg *_newBase, idBitMsg *_delta );
+	void			Init( const idBitMsg *_base, idBitMsg *_newBase, const idBitMsg *_delta );
 	bool			HasChanged( void ) const;
 
 	void			WriteBits( int value, int numBits );
@@ -515,19 +515,19 @@ ID_INLINE idBitMsgDelta::idBitMsgDelta() {
 	changed = false;
 }
 
-ID_INLINE void idBitMsgDelta::Init( const idBitMsg *base, idBitMsg *newBase, idBitMsg *delta ) {
-	this->base = base;
-	this->newBase = newBase;
-	this->writeDelta = delta;
-	this->readDelta = delta;
+ID_INLINE void idBitMsgDelta::Init( const idBitMsg *_base, idBitMsg *_newBase, idBitMsg *_delta ) {
+	this->base = _base;
+	this->newBase = _newBase;
+	this->writeDelta = _delta;
+	this->readDelta = _delta;
 	this->changed = false;
 }
 
-ID_INLINE void idBitMsgDelta::Init( const idBitMsg *base, idBitMsg *newBase, const idBitMsg *delta ) {
-	this->base = base;
-	this->newBase = newBase;
+ID_INLINE void idBitMsgDelta::Init( const idBitMsg *_base, idBitMsg *_newBase, const idBitMsg *_delta ) {
+	this->base = _base;
+	this->newBase = _newBase;
 	this->writeDelta = NULL;
-	this->readDelta = delta;
+	this->readDelta = _delta;
 	this->changed = false;
 }
 

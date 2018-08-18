@@ -28,15 +28,22 @@ If you have questions concerning this license or the applicable additional terms
 #include "../../idlib/precompiled.h"
 #pragma hdrstop
 
+#define SK_ONLY_OPENAL
+
 // DirectX SDK
+#ifndef SK_ONLY_OPENAL
 #include <DxErr.h>
 
 #include <ks.h>
 #include <ksmedia.h>
+#endif
+
 #include "../../sound/snd_local.h"
 #include "win_local.h"
 
 #include "../../openal/idal.cpp"
+
+#ifndef SK_ONLY_OPENAL
 
 #define SAFE_DELETE(p)       { if(p) { delete (p);     (p)=NULL; } }
 #define SAFE_DELETE_ARRAY(p) { if(p) { delete[] (p);   (p)=NULL; } }
@@ -502,6 +509,36 @@ bool idAudioHardwareWIN32::GetCurrentPosition( ulong *pdwCurrentWriteCursor ) {
 	return false;
 }
 
+#else
+
+class idAudioHardwareSTUB : public idAudioHardware {
+
+public:
+    idAudioHardwareSTUB() {}
+    ~idAudioHardwareSTUB() {}
+
+    virtual bool Initialize() { return true; }
+
+    virtual bool Lock(void **, ulong *) { return true; }
+    virtual bool Unlock(void *, dword) { return true; }
+    virtual bool GetCurrentPosition(ulong *) { return true; }
+
+    // try to write as many sound samples to the device as possible without blocking and prepare for a possible new mixing call
+    // returns wether there is *some* space for writing available
+    virtual bool Flush(void) { return true; }
+
+    virtual void Write(bool) {}
+
+    virtual int GetNumberOfSpeakers(void) { return 2; }
+    virtual int GetMixBufferSize(void) { return 4096; }
+    virtual short* GetMixBuffer(void) { static short b[4096]; return b; }
+};
+
+idAudioHardware *idAudioHardware::Alloc() { return new idAudioHardwareSTUB(); }
+idAudioHardware::~idAudioHardware() {}
+
+#endif // SK_ONLY_OPENAL
+
 static HMODULE hOpenAL = NULL;
 
 /*
@@ -545,6 +582,8 @@ void Sys_FreeOpenAL( void ) {
 		hOpenAL = NULL;
 	}
 }
+
+#ifndef SK_ONLY_OPENAL
 
 /*
 ===============
@@ -845,3 +884,5 @@ void idAudioBufferWIN32::SetVolume( float x) {
 		m_apDSBuffer->SetVolume(x);
 	}
 }
+
+#endif // SK_ONLY_OPENAL

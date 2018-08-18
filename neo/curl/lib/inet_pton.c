@@ -45,7 +45,9 @@
 #define	INT16SZ		 2
 
 #ifdef WIN32
+#ifndef EAFNOSUPPORT
 #define EAFNOSUPPORT    WSAEAFNOSUPPORT
+#endif
 #endif
 
 /*

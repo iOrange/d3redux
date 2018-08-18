@@ -27,6 +27,8 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 // This is real evil but allows the code to inspect arbitrary class variables.
+//#NOTE_SK: fixes compilation
+#define _ALLOW_KEYWORD_MACROS
 #define private		public
 #define protected	public
 
