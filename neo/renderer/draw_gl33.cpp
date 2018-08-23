@@ -91,10 +91,13 @@ static  const int   MAX_GLPROGS = 256;
 // a single file can have both a vertex program and a fragment program
 static glslProg_t glslProgs[MAX_GLPROGS] = {
     { VPROG_TEST,           0, {-1}, {-1}, "test.glsl" },
+    { VPROG_INTERACTION,    0, {-1}, {-1}, "interaction.glsl" },
     { GLPROG_DEPTH_PASS,    0, {-1}, {-1}, "depth_pass.glsl" },
 
 // additional programs can be dynamically specified in materials
 };
+
+int gLastProgIdx = -1;
 
 
 enum E_VERTEX_ATTRIBS {
@@ -179,6 +182,8 @@ void R_LoadGLSLProgram(int progIndex) {
         return;
     }
 
+    GLuint oldShader = glslProgs[progIndex].handle;
+
     GLuint vertexShader = R_CompileGLSLShader(fileBuffer, fileLen, false);
     GLuint fragmentShader = R_CompileGLSLShader(fileBuffer, fileLen, true);
 
@@ -217,6 +222,10 @@ void R_LoadGLSLProgram(int progIndex) {
             if (!status) {
                 qglDeleteObjectARB(shader);
             } else {
+                if (oldShader) {
+                    qglDeleteObjectARB(oldShader);
+                }
+
                 glslProgs[progIndex].handle = shader;
 
                 // collect uniforms
@@ -225,11 +234,6 @@ void R_LoadGLSLProgram(int progIndex) {
                 }
                 for (int i = 0; i < EFU_Last; ++i) {
                     glslProgs[progIndex].fulocs[i] = qglGetUniformLocationARB(shader, sFragmentUniforms[i]);
-
-                    //// we pre-assign sampler uniforms
-                    //if (i <= EFU_TexSpecularLUT && glslProgs[progIndex].fulocs[i] >= 0) {
-                    //    qglUniform1iARB(glslProgs[progIndex].fulocs[i], i);
-                    //}
                 }
             }
         }
@@ -288,17 +292,17 @@ static void SetUniformMat4(const int loc, const float* v) {
 }
 
 int R_GL33_UseProgram(const int ident) {
-    int result = -1;
+    gLastProgIdx = -1;
 
     for (int i = 0; glslProgs[i].name[0]; ++i) {
         if (glslProgs[i].ident == ident) {
-            result = i;
+            gLastProgIdx = i;
             qglUseProgramObjectARB(glslProgs[i].handle);
             break;
         }
     }
 
-    return result;
+    return gLastProgIdx;
 }
 
 /*
@@ -307,7 +311,7 @@ RB_GL33_DrawInteraction
 ==================
 */
 void RB_GL33_DrawInteraction(const drawInteraction_t* din) {
-    glslProg_t& prog = glslProgs[0];
+    glslProg_t& prog = glslProgs[gLastProgIdx];
 
     // load all the vertex program uniforms
     SetUniformMat4(prog.vulocs[EVU_MVP],              din->modelViewProj.ToFloatPtr());
@@ -391,14 +395,14 @@ void RB_GL33_CreateDrawInteractions(const drawSurf_t* surf) {
     GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHMASK | backEnd.depthFunc);
 
     // bind the vertex program
-    const int progIdx = R_GL33_UseProgram(VPROG_TEST);
+    const int progIdx = R_GL33_UseProgram(VPROG_INTERACTION);
     if (progIdx < 0) {
         return;
     }
 
     // we pre-assign sampler uniforms
     for (int i = 0; i < EFU_Last; ++i) {
-        if (i <= EFU_TexSpecularLUT && glslProgs[0].fulocs[i] >= 0) {
+        if (i <= EFU_TexSpecularLUT && glslProgs[progIdx].fulocs[i] >= 0) {
             qglUniform1iARB(glslProgs[progIdx].fulocs[i], i);
         }
     }
@@ -422,9 +426,9 @@ void RB_GL33_CreateDrawInteractions(const drawSurf_t* surf) {
     // texture 6 is the specular lookup table
     GL_SelectTextureNoClient(EFU_TexSpecularLUT);
     //if (r_testARBProgram.GetBool()) {
-        globalImages->specular2DTableImage->Bind();	// variable specularity in alpha channel
+    //    globalImages->specular2DTableImage->Bind();	// variable specularity in alpha channel
     //} else {
-    //    globalImages->specularTableImage->Bind();
+        globalImages->specularTableImage->Bind();
     //}
 
 
