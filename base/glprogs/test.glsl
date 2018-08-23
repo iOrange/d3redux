@@ -1,11 +1,11 @@
 struct Vertex2Fragment {
     vec3 ToLight;
     vec3 ToViewer;
-    vec2 TC1;
-    vec2 TC2;
-    vec3 TC3;
-    vec2 TC4;
-    vec2 TC5;
+    vec2 uvBumpmap;
+    vec2 uvLightFalloff;
+    vec3 uvLightCookie;
+    vec2 uvDiffuse;
+    vec2 uvSpecular;
     vec4 Color;
 };
 
@@ -51,21 +51,21 @@ void main() {
 
     vec4 tcV4 = vec4(inUV, 1.0, 1.0);
 
-    v2f.TC1.x = dot(tcV4, gBumpMatrix_S);
-    v2f.TC1.y = dot(tcV4, gBumpMatrix_T);
+    v2f.uvBumpmap.x = dot(tcV4, gBumpMatrix_S);
+    v2f.uvBumpmap.y = dot(tcV4, gBumpMatrix_T);
 
-    v2f.TC2.x = dot(vPos, gLightFalloff_S);
-    v2f.TC2.y = 0.5;
+    v2f.uvLightFalloff.x = dot(vPos, gLightFalloff_S);
+    v2f.uvLightFalloff.y = 0.5;
 
-    v2f.TC3.x = dot(vPos, gLightProject_S);
-    v2f.TC3.y = dot(vPos, gLightProject_T);
-    v2f.TC3.z = dot(vPos, gLightProject_Q);
+    v2f.uvLightCookie.x = dot(vPos, gLightProject_S);
+    v2f.uvLightCookie.y = dot(vPos, gLightProject_T);
+    v2f.uvLightCookie.z = dot(vPos, gLightProject_Q);
 
-    v2f.TC4.x = dot(tcV4, gDiffuseMatrix_S);
-    v2f.TC4.y = dot(tcV4, gDiffuseMatrix_T);
+    v2f.uvDiffuse.x = dot(tcV4, gDiffuseMatrix_S);
+    v2f.uvDiffuse.y = dot(tcV4, gDiffuseMatrix_T);
 
-    v2f.TC5.x = dot(tcV4, gSpecularMatrix_S);
-    v2f.TC5.y = dot(tcV4, gSpecularMatrix_T);
+    v2f.uvSpecular.x = dot(tcV4, gSpecularMatrix_S);
+    v2f.uvSpecular.y = dot(tcV4, gSpecularMatrix_T);
 
     v2f.Color = inColor * gColorMod + gColorAdd;
 
@@ -106,20 +106,20 @@ void main() {
 
     // load the filtered normal map, then normalize to full scale,
     // leaving the divergence in .w unmodified
-    vec4 localNormal = texture(gTexBumpMap, v2f.TC1);
+    vec4 localNormal = texture(gTexBumpMap, v2f.uvBumpmap);
     localNormal.xyz = normalize(localNormal.xyz * 2.0 - 1.0);
 
     // diffuse dot product
     vec4 light = vec4(vec3(dot(toLight, localNormal.xyz)), 1.0);
 
     // modulate by the light projection
-    light *= textureProj(gTexLight, v2f.TC3);
+    light *= textureProj(gTexLight, v2f.uvLightCookie);
 
     // modulate by the light falloff
-    light *= texture(gTexLightFalloff, v2f.TC2);
+    light *= texture(gTexLightFalloff, v2f.uvLightFalloff);
 
     // modulate the diffuse map and constant diffuse factor
-    vec4 color = texture(gTexDiffuse, v2f.TC4);
+    vec4 color = texture(gTexDiffuse, v2f.uvDiffuse);
     color *= gDiffuseModifier;
 
     // calculate the specular reflection vector from light and localNormal
@@ -136,7 +136,7 @@ void main() {
     specular *= gSpecularModifier;
 
     // modulate by the specular map * 2
-    specular *= texture(gTexSpecular, v2f.TC5) * 2.0;
+    specular *= texture(gTexSpecular, v2f.uvSpecular) * 2.0;
 
     color = (specular + color) * light;
 
