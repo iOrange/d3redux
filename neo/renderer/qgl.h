@@ -163,6 +163,51 @@ extern PFNGLPROGRAMLOCALPARAMETER4FVARBPROC	qglProgramLocalParameter4fvARB;
 // GL_EXT_depth_bounds_test
 extern PFNGLDEPTHBOUNDSEXTPROC              qglDepthBoundsEXT;
 
+// GLSL shaders
+extern  PFNGLDELETEOBJECTARBPROC            qglDeleteObjectARB;
+extern  PFNGLGETHANDLEARBPROC               qglGetHandleARB;
+extern  PFNGLDETACHOBJECTARBPROC            qglDetachObjectARB;
+extern  PFNGLCREATESHADEROBJECTARBPROC      qglCreateShaderObjectARB;
+extern  PFNGLSHADERSOURCEARBPROC            qglShaderSourceARB;
+extern  PFNGLCOMPILESHADERARBPROC           qglCompileShaderARB;
+extern  PFNGLCREATEPROGRAMOBJECTARBPROC     qglCreateProgramObjectARB;
+extern  PFNGLATTACHOBJECTARBPROC            qglAttachObjectARB;
+extern  PFNGLLINKPROGRAMARBPROC             qglLinkProgramARB;
+extern  PFNGLUSEPROGRAMOBJECTARBPROC        qglUseProgramObjectARB;
+extern  PFNGLVALIDATEPROGRAMARBPROC         qglValidateProgramARB;
+extern  PFNGLUNIFORM1FARBPROC               qglUniform1fARB;
+extern  PFNGLUNIFORM2FARBPROC               qglUniform2fARB;
+extern  PFNGLUNIFORM3FARBPROC               qglUniform3fARB;
+extern  PFNGLUNIFORM4FARBPROC               qglUniform4fARB;
+extern  PFNGLUNIFORM1IARBPROC               qglUniform1iARB;
+extern  PFNGLUNIFORM2IARBPROC               qglUniform2iARB;
+extern  PFNGLUNIFORM3IARBPROC               qglUniform3iARB;
+extern  PFNGLUNIFORM4IARBPROC               qglUniform4iARB;
+extern  PFNGLUNIFORM1FVARBPROC              qglUniform1fvARB;
+extern  PFNGLUNIFORM2FVARBPROC              qglUniform2fvARB;
+extern  PFNGLUNIFORM3FVARBPROC              qglUniform3fvARB;
+extern  PFNGLUNIFORM4FVARBPROC              qglUniform4fvARB;
+extern  PFNGLUNIFORM1IVARBPROC              qglUniform1ivARB;
+extern  PFNGLUNIFORM2IVARBPROC              qglUniform2ivARB;
+extern  PFNGLUNIFORM3IVARBPROC              qglUniform3ivARB;
+extern  PFNGLUNIFORM4IVARBPROC              qglUniform4ivARB;
+extern  PFNGLUNIFORMMATRIX2FVARBPROC        qglUniformMatrix2fvARB;
+extern  PFNGLUNIFORMMATRIX3FVARBPROC        qglUniformMatrix3fvARB;
+extern  PFNGLUNIFORMMATRIX4FVARBPROC        qglUniformMatrix4fvARB;
+extern  PFNGLGETOBJECTPARAMETERFVARBPROC    qglGetObjectParameterfvARB;
+extern  PFNGLGETOBJECTPARAMETERIVARBPROC    qglGetObjectParameterivARB;
+extern  PFNGLGETINFOLOGARBPROC              qglGetInfoLogARB;
+extern  PFNGLGETATTACHEDOBJECTSARBPROC      qglGetAttachedObjectsARB;
+extern  PFNGLGETUNIFORMLOCATIONARBPROC      qglGetUniformLocationARB;
+extern  PFNGLGETACTIVEUNIFORMARBPROC        qglGetActiveUniformARB;
+extern  PFNGLGETUNIFORMFVARBPROC            qglGetUniformfvARB;
+extern  PFNGLGETUNIFORMIVARBPROC            qglGetUniformivARB;
+extern  PFNGLGETSHADERSOURCEARBPROC         qglGetShaderSourceARB;
+extern  PFNGLBINDATTRIBLOCATIONARBPROC      qglBindAttribLocationARB;
+extern  PFNGLGETACTIVEATTRIBARBPROC         qglGetActiveAttribARB;
+extern  PFNGLGETATTRIBLOCATIONARBPROC       qglGetAttribLocationARB;
+extern  PFNGLGETVERTEXATTRIBFVARBPROC       qglGetVertexAttribfvARB;
+
 //===========================================================================
 
 // non-windows systems will just redefine qgl* to gl*

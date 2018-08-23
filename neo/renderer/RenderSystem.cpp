@@ -254,9 +254,7 @@ void R_LockSurfaceScene( viewDef_t *parms ) {
 	// update the view origin and axis, and all
 	// the entity matricies
 	for( vModel = tr.lockSurfacesCmd.viewDef->viewEntitys ; vModel ; vModel = vModel->next ) {
-		myGlMultMatrix( vModel->modelMatrix, 
-			tr.lockSurfacesCmd.viewDef->worldSpace.modelViewMatrix,
-			vModel->modelViewMatrix );
+        vModel->modelViewMatrix = vModel->modelMatrix * tr.lockSurfacesCmd.viewDef->worldSpace.modelViewMatrix;
 	}
 
 	// add the stored off surface commands again
@@ -542,66 +540,40 @@ void idRenderSystemLocal::SetBackEndRenderer() {
 
 	backEndRenderer = BE_BAD;
 
-	if ( idStr::Icmp( r_renderer.GetString(), "arb" ) == 0 ) {
-		backEndRenderer = BE_ARB;
-	} else if ( idStr::Icmp( r_renderer.GetString(), "arb2" ) == 0 ) {
+    if ( idStr::Icmp( r_renderer.GetString(), "arb2" ) == 0 ) {
 		if ( glConfig.allowARB2Path ) {
 			backEndRenderer = BE_ARB2;
 		}
-	} else if ( idStr::Icmp( r_renderer.GetString(), "nv10" ) == 0 ) {
-		if ( glConfig.allowNV10Path ) {
-			backEndRenderer = BE_NV10;
-		}
-	} else if ( idStr::Icmp( r_renderer.GetString(), "nv20" ) == 0 ) {
-		if ( glConfig.allowNV20Path ) {
-			backEndRenderer = BE_NV20;
-		}
-	} else if ( idStr::Icmp( r_renderer.GetString(), "r200" ) == 0 ) {
-		if ( glConfig.allowR200Path ) {
-			backEndRenderer = BE_R200;
+	} else if ( idStr::Icmp( r_renderer.GetString(), "gl33" ) == 0 ) {
+		if ( glConfig.allowGL33Path ) {
+			backEndRenderer = BE_GL33;
 		}
 	}
 
 	// fallback
 	if ( backEndRenderer == BE_BAD ) {
-		// choose the best
-		if ( glConfig.allowARB2Path ) {
-			backEndRenderer = BE_ARB2;
-		} else if ( glConfig.allowR200Path ) {
-			backEndRenderer = BE_R200;
-		} else if ( glConfig.allowNV20Path ) {
-			backEndRenderer = BE_NV20;
-		} else if ( glConfig.allowNV10Path ) {
-			backEndRenderer = BE_NV10;
-		} else {
-			// the others are considered experimental
-			backEndRenderer = BE_ARB;
-		}
+        // choose the best
+        if (glConfig.allowGL33Path) {
+            backEndRenderer = BE_GL33;
+        } else {
+            backEndRenderer = BE_ARB2;
+        }
 	}
 
 	backEndRendererHasVertexPrograms = false;
 	backEndRendererMaxLight = 1.0;
 
 	switch( backEndRenderer ) {
-	case BE_ARB:
-		common->Printf( "using ARB renderSystem\n" );
-		break;
-	case BE_NV10:
-		common->Printf( "using NV10 renderSystem\n" );
-		break;
-	case BE_NV20:
-		common->Printf( "using NV20 renderSystem\n" );
-		backEndRendererHasVertexPrograms = true;
-		break;
-	case BE_R200:
-		common->Printf( "using R200 renderSystem\n" );
-		backEndRendererHasVertexPrograms = true;
-		break;
 	case BE_ARB2:
 		common->Printf( "using ARB2 renderSystem\n" );
 		backEndRendererHasVertexPrograms = true;
 		backEndRendererMaxLight = 999;
 		break;
+    case BE_GL33:
+        common->Printf("using GL33 renderSystem\n");
+        backEndRendererHasVertexPrograms = true;
+        backEndRendererMaxLight = 999;
+        break;
 	default:
 		common->FatalError( "SetbackEndRenderer: bad back end" );
 	}
@@ -609,12 +581,15 @@ void idRenderSystemLocal::SetBackEndRenderer() {
 	// clear the vertex cache if we are changing between
 	// using vertex programs and not, because specular and
 	// shadows will be different data
+    //#NOTE_SK: remove ???
+#if 0
 	if ( oldVPstate != backEndRendererHasVertexPrograms ) {
 		vertexCache.PurgeAll();
 		if ( primaryWorld ) {
 			primaryWorld->FreeInteractions();
 		}
 	}
+#endif
 
 	r_renderer.ClearModified();
 }

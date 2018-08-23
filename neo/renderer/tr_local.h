@@ -357,8 +357,8 @@ typedef struct viewEntity_s {
 	bool				weaponDepthHack;
 	float				modelDepthHack;
 
-	float				modelMatrix[16];		// local coords to global coords
-	float				modelViewMatrix[16];	// local coords to eye coords
+	idMat4				modelMatrix;		// local coords to global coords
+	idMat4				modelViewMatrix;	// local coords to eye coords
 } viewEntity_t;
 
 
@@ -369,7 +369,7 @@ typedef struct viewDef_s {
 	// specified in the call to DrawScene()
 	renderView_t		renderView;
 
-	float				projectionMatrix[16];
+	idMat4				projectionMatrix;
 	viewEntity_t		worldSpace;
 
 	idRenderWorldLocal *renderWorld;
@@ -456,6 +456,9 @@ typedef struct {
 	idVec4				bumpMatrix[2];
 	idVec4				diffuseMatrix[2];
 	idVec4				specularMatrix[2];
+
+    //#NOTE_SK: added matrices here
+    idMat4              modelViewProj;
 } drawInteraction_t;
 
 
@@ -670,11 +673,8 @@ const int MAX_GUI_SURFACES	= 1024;		// default size of the drawSurfs list for gu
 										// be automatically expanded as needed
 
 typedef enum {
-	BE_ARB,
-	BE_NV10,
-	BE_NV20,
-	BE_R200,
 	BE_ARB2,
+    BE_GL33,
 	BE_BAD
 } backEndName_t;
 
@@ -842,9 +842,6 @@ extern idCVar r_gamma;					// changes gamma tables
 extern idCVar r_brightness;				// changes gamma tables
 
 extern idCVar r_renderer;				// arb, nv10, nv20, r200, gl2, etc
-
-extern idCVar r_cgVertexProfile;		// arbvp1, vp20, vp30
-extern idCVar r_cgFragmentProfile;		// arbfp1, fp30
 
 extern idCVar r_checkBounds;			// compare all surface bounds with precalculated ones
 
@@ -1133,21 +1130,21 @@ MAIN
 void R_RenderView( viewDef_t *parms );
 
 // performs radius cull first, then corner cull
-bool R_CullLocalBox( const idBounds &bounds, const float modelMatrix[16], int numPlanes, const idPlane *planes );
-bool R_RadiusCullLocalBox( const idBounds &bounds, const float modelMatrix[16], int numPlanes, const idPlane *planes );
-bool R_CornerCullLocalBox( const idBounds &bounds, const float modelMatrix[16], int numPlanes, const idPlane *planes );
+bool R_CullLocalBox( const idBounds &bounds, const float* modelMatrix, int numPlanes, const idPlane *planes );
+bool R_RadiusCullLocalBox( const idBounds &bounds, const float* modelMatrix, int numPlanes, const idPlane *planes );
+bool R_CornerCullLocalBox( const idBounds &bounds, const float* modelMatrix, int numPlanes, const idPlane *planes );
 
-void R_AxisToModelMatrix( const idMat3 &axis, const idVec3 &origin, float modelMatrix[16] );
+void R_AxisToModelMatrix( const idMat3 &axis, const idVec3 &origin, float* modelMatrix );
 
 // note that many of these assume a normalized matrix, and will not work with scaled axis
-void R_GlobalPointToLocal( const float modelMatrix[16], const idVec3 &in, idVec3 &out );
-void R_GlobalVectorToLocal( const float modelMatrix[16], const idVec3 &in, idVec3 &out );
-void R_GlobalPlaneToLocal( const float modelMatrix[16], const idPlane &in, idPlane &out );
-void R_PointTimesMatrix( const float modelMatrix[16], const idVec4 &in, idVec4 &out );
-void R_LocalPointToGlobal( const float modelMatrix[16], const idVec3 &in, idVec3 &out );
-void R_LocalVectorToGlobal( const float modelMatrix[16], const idVec3 &in, idVec3 &out );
-void R_LocalPlaneToGlobal( const float modelMatrix[16], const idPlane &in, idPlane &out );
-void R_TransformEyeZToWin( float src_z, const float *projectionMatrix, float &dst_z );
+void R_GlobalPointToLocal( const float* modelMatrix, const idVec3 &in, idVec3 &out );
+void R_GlobalVectorToLocal( const float* modelMatrix, const idVec3 &in, idVec3 &out );
+void R_GlobalPlaneToLocal( const float* modelMatrix, const idPlane &in, idPlane &out );
+void R_PointTimesMatrix( const float* modelMatrix, const idVec4 &in, idVec4 &out );
+void R_LocalPointToGlobal( const float* modelMatrix, const idVec3 &in, idVec3 &out );
+void R_LocalVectorToGlobal( const float* modelMatrix, const idVec3 &in, idVec3 &out );
+void R_LocalPlaneToGlobal( const float* modelMatrix, const idPlane &in, idPlane &out );
+void R_TransformEyeZToWin( float src_z, const float* projectionMatrix, float &dst_z );
 
 void R_GlobalToNormalizedDeviceCoordinates( const idVec3 &global, idVec3 &ndc );
 
@@ -1295,21 +1292,15 @@ DRAW_*
 ============================================================
 */
 
-void	RB_ARB_DrawInteractions( void );
-
-void	R_R200_Init( void );
-void	RB_R200_DrawInteractions( void );
-
-void	R_NV10_Init( void );
-void	RB_NV10_DrawInteractions( void );
-
-void	R_NV20_Init( void );
-void	RB_NV20_DrawInteractions( void );
-
 void	R_ARB2_Init( void );
 void	RB_ARB2_DrawInteractions( void );
 void	R_ReloadARBPrograms_f( const idCmdArgs &args );
 int		R_FindARBProgram( GLenum target, const char *program );
+
+void    R_GL33_Init();
+void    R_ReloadGLSLPrograms_f(const idCmdArgs &args);
+void    RB_GL33_DrawInteractions();
+void    RB_GL33_FillDepthBuffer(const drawSurf_t* surf);
 
 typedef enum {
 	PROG_INVALID,
@@ -1331,6 +1322,9 @@ typedef enum {
 	FPROG_AMBIENT,
 	VPROG_GLASSWARP,
 	FPROG_GLASSWARP,
+
+    GLPROG_DEPTH_PASS,  // z-prepass shader
+
 	PROG_USER
 } program_t;
 

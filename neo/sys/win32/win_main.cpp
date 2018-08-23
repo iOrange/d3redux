@@ -656,13 +656,18 @@ Sys_DLL_Load
 =====================
 */
 int Sys_DLL_Load( const char *dllName ) {
-	HINSTANCE	libHandle;
-	libHandle = LoadLibrary( dllName );
+	HINSTANCE libHandle;
+    char canonicalPath[MAX_OSPATH] = { 0 };
+    //#NOTE_SK: since our path can contain ".." and stuff, let's canonicalize it
+    //basically, I'm fixing debug :(
+    ::PathCanonicalize(canonicalPath, dllName);
+
+	libHandle = ::LoadLibrary(canonicalPath);
 	if ( libHandle ) {
 		// since we can't have LoadLibrary load only from the specified path, check it did the right thing
 		char loadedPath[ MAX_OSPATH ];
-		GetModuleFileName( libHandle, loadedPath, sizeof( loadedPath ) - 1 );
-		if ( idStr::IcmpPath( dllName, loadedPath ) ) {
+		::GetModuleFileName( libHandle, loadedPath, sizeof( loadedPath ) - 1 );
+		if (idStr::IcmpPath(canonicalPath, loadedPath)) {
 			Sys_Printf( "ERROR: LoadLibrary '%s' wants to load '%s'\n", dllName, loadedPath );
 			Sys_DLL_Unload( (int)libHandle );
 			return 0;

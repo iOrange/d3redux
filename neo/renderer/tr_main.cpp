@@ -157,8 +157,8 @@ idScreenRect R_ScreenRectFromViewFrustumBounds( const idBounds &bounds ) {
 	screenRect.y2 = idMath::FtoiFast( 0.5f * ( 1.0f + bounds[1].z ) * ( tr.viewDef->viewport.y2 - tr.viewDef->viewport.y1 ) );
 
 	if ( r_useDepthBoundsTest.GetInteger() ) {
-		R_TransformEyeZToWin( -bounds[0].x, tr.viewDef->projectionMatrix, screenRect.zmin );
-		R_TransformEyeZToWin( -bounds[1].x, tr.viewDef->projectionMatrix, screenRect.zmax );
+		R_TransformEyeZToWin( -bounds[0].x, tr.viewDef->projectionMatrix.ToFloatPtr(), screenRect.zmin );
+		R_TransformEyeZToWin( -bounds[1].x, tr.viewDef->projectionMatrix.ToFloatPtr(), screenRect.zmax );
 	}
 
 	return screenRect;
@@ -442,7 +442,7 @@ void R_FrameFree( void *data ) {
 
 //==========================================================================
 
-void R_AxisToModelMatrix( const idMat3 &axis, const idVec3 &origin, float modelMatrix[16] ) {
+void R_AxisToModelMatrix( const idMat3 &axis, const idVec3 &origin, float* modelMatrix ) {
 	modelMatrix[0] = axis[0][0];
 	modelMatrix[4] = axis[1][0];
 	modelMatrix[8] = axis[2][0];
@@ -467,7 +467,7 @@ void R_AxisToModelMatrix( const idMat3 &axis, const idVec3 &origin, float modelM
 
 // FIXME: these assume no skewing or scaling transforms
 
-void R_LocalPointToGlobal( const float modelMatrix[16], const idVec3 &in, idVec3 &out ) {
+void R_LocalPointToGlobal( const float* modelMatrix, const idVec3 &in, idVec3 &out ) {
 #if defined(MACOS_X) && defined(__i386__)
 	__m128 m0, m1, m2, m3;
 	__m128 in0, in1, in2;
@@ -508,7 +508,7 @@ void R_LocalPointToGlobal( const float modelMatrix[16], const idVec3 &in, idVec3
 #endif
 }
 
-void R_PointTimesMatrix( const float modelMatrix[16], const idVec4 &in, idVec4 &out ) {
+void R_PointTimesMatrix( const float* modelMatrix, const idVec4 &in, idVec4 &out ) {
 	out[0] = in[0] * modelMatrix[0] + in[1] * modelMatrix[4]
 		+ in[2] * modelMatrix[8] + modelMatrix[12];
 	out[1] = in[0] * modelMatrix[1] + in[1] * modelMatrix[5]
@@ -519,7 +519,7 @@ void R_PointTimesMatrix( const float modelMatrix[16], const idVec4 &in, idVec4 &
 		+ in[2] * modelMatrix[11] + modelMatrix[15];
 }
 
-void R_GlobalPointToLocal( const float modelMatrix[16], const idVec3 &in, idVec3 &out ) {
+void R_GlobalPointToLocal( const float* modelMatrix, const idVec3 &in, idVec3 &out ) {
 	idVec3	temp;
 
 	VectorSubtract( in, &modelMatrix[12], temp );
@@ -529,7 +529,7 @@ void R_GlobalPointToLocal( const float modelMatrix[16], const idVec3 &in, idVec3
 	out[2] = DotProduct( temp, &modelMatrix[8] );
 }
 
-void R_LocalVectorToGlobal( const float modelMatrix[16], const idVec3 &in, idVec3 &out ) {
+void R_LocalVectorToGlobal( const float* modelMatrix, const idVec3 &in, idVec3 &out ) {
 	out[0] = in[0] * modelMatrix[0] + in[1] * modelMatrix[4]
 		+ in[2] * modelMatrix[8];
 	out[1] = in[0] * modelMatrix[1] + in[1] * modelMatrix[5]
@@ -538,20 +538,20 @@ void R_LocalVectorToGlobal( const float modelMatrix[16], const idVec3 &in, idVec
 		+ in[2] * modelMatrix[10];
 }
 
-void R_GlobalVectorToLocal( const float modelMatrix[16], const idVec3 &in, idVec3 &out ) {
+void R_GlobalVectorToLocal( const float* modelMatrix, const idVec3 &in, idVec3 &out ) {
 	out[0] = DotProduct( in, &modelMatrix[0] );
 	out[1] = DotProduct( in, &modelMatrix[4] );
 	out[2] = DotProduct( in, &modelMatrix[8] );
 }
 
-void R_GlobalPlaneToLocal( const float modelMatrix[16], const idPlane &in, idPlane &out ) {
+void R_GlobalPlaneToLocal( const float* modelMatrix, const idPlane &in, idPlane &out ) {
 	out[0] = DotProduct( in, &modelMatrix[0] );
 	out[1] = DotProduct( in, &modelMatrix[4] );
 	out[2] = DotProduct( in, &modelMatrix[8] );
 	out[3] = in[3] + modelMatrix[12] * in[0] + modelMatrix[13] * in[1] + modelMatrix[14] * in[2];
 }
 
-void R_LocalPlaneToGlobal( const float modelMatrix[16], const idPlane &in, idPlane &out ) {
+void R_LocalPlaneToGlobal( const float* modelMatrix, const idPlane &in, idPlane &out ) {
 	float	offset;
 
 	R_LocalVectorToGlobal( modelMatrix, in.Normal(), out.Normal() );
@@ -584,7 +584,7 @@ A fast, conservative center-to-corner culling test
 Returns true if the box is outside the given global frustum, (positive sides are out)
 =================
 */
-bool R_RadiusCullLocalBox( const idBounds &bounds, const float modelMatrix[16], int numPlanes, const idPlane *planes ) {
+bool R_RadiusCullLocalBox( const idBounds &bounds, const float* modelMatrix, int numPlanes, const idPlane *planes ) {
 	int			i;
 	float		d;
 	idVec3		worldOrigin;
@@ -622,7 +622,7 @@ Can still generate a few false positives when the box is outside a corner.
 Returns true if the box is outside the given global frustum, (positive sides are out)
 =================
 */
-bool R_CornerCullLocalBox( const idBounds &bounds, const float modelMatrix[16], int numPlanes, const idPlane *planes ) {
+bool R_CornerCullLocalBox( const idBounds &bounds, const float* modelMatrix, int numPlanes, const idPlane *planes ) {
 	int			i, j;
 	idVec3		transformed[8];
 	float		dists[8];
@@ -672,7 +672,7 @@ Performs quick test before expensive test
 Returns true if the box is outside the given global frustum, (positive sides are out)
 =================
 */
-bool R_CullLocalBox( const idBounds &bounds, const float modelMatrix[16], int numPlanes, const idPlane *planes ) {
+bool R_CullLocalBox( const idBounds &bounds, const float* modelMatrix, int numPlanes, const idPlane *planes ) {
 	if ( R_RadiusCullLocalBox( bounds, modelMatrix, numPlanes, planes ) ) {
 		return true;
 	}
@@ -721,37 +721,37 @@ void R_GlobalToNormalizedDeviceCoordinates( const idVec3 &global, idVec3 &ndc ) 
 
 		for ( i = 0 ; i < 4 ; i ++ ) {
 			view[i] = 
-				global[0] * tr.primaryView->worldSpace.modelViewMatrix[ i + 0 * 4 ] +
-				global[1] * tr.primaryView->worldSpace.modelViewMatrix[ i + 1 * 4 ] +
-				global[2] * tr.primaryView->worldSpace.modelViewMatrix[ i + 2 * 4 ] +
-					tr.primaryView->worldSpace.modelViewMatrix[ i + 3 * 4 ];
+				global[0] * tr.primaryView->worldSpace.modelViewMatrix.At(i + 0 * 4) +
+				global[1] * tr.primaryView->worldSpace.modelViewMatrix.At(i + 1 * 4) +
+				global[2] * tr.primaryView->worldSpace.modelViewMatrix.At(i + 2 * 4) +
+					        tr.primaryView->worldSpace.modelViewMatrix.At(i + 3 * 4);
 		}
 
 		for ( i = 0 ; i < 4 ; i ++ ) {
 			clip[i] = 
-				view[0] * tr.primaryView->projectionMatrix[ i + 0 * 4 ] +
-				view[1] * tr.primaryView->projectionMatrix[ i + 1 * 4 ] +
-				view[2] * tr.primaryView->projectionMatrix[ i + 2 * 4 ] +
-				view[3] * tr.primaryView->projectionMatrix[ i + 3 * 4 ];
+				view[0] * tr.primaryView->projectionMatrix.At(i + 0 * 4) +
+				view[1] * tr.primaryView->projectionMatrix.At(i + 1 * 4) +
+				view[2] * tr.primaryView->projectionMatrix.At(i + 2 * 4) +
+				view[3] * tr.primaryView->projectionMatrix.At(i + 3 * 4);
 		}
 
 	} else {
 
 		for ( i = 0 ; i < 4 ; i ++ ) {
 			view[i] = 
-				global[0] * tr.viewDef->worldSpace.modelViewMatrix[ i + 0 * 4 ] +
-				global[1] * tr.viewDef->worldSpace.modelViewMatrix[ i + 1 * 4 ] +
-				global[2] * tr.viewDef->worldSpace.modelViewMatrix[ i + 2 * 4 ] +
-				tr.viewDef->worldSpace.modelViewMatrix[ i + 3 * 4 ];
+				global[0] * tr.viewDef->worldSpace.modelViewMatrix.At(i + 0 * 4) +
+				global[1] * tr.viewDef->worldSpace.modelViewMatrix.At(i + 1 * 4) +
+				global[2] * tr.viewDef->worldSpace.modelViewMatrix.At(i + 2 * 4) +
+				            tr.viewDef->worldSpace.modelViewMatrix.At(i + 3 * 4);
 		}
 
 
 		for ( i = 0 ; i < 4 ; i ++ ) {
 			clip[i] = 
-				view[0] * tr.viewDef->projectionMatrix[ i + 0 * 4 ] +
-				view[1] * tr.viewDef->projectionMatrix[ i + 1 * 4 ] +
-				view[2] * tr.viewDef->projectionMatrix[ i + 2 * 4 ] +
-				view[3] * tr.viewDef->projectionMatrix[ i + 3 * 4 ];
+				view[0] * tr.viewDef->projectionMatrix.At(i + 0 * 4) +
+				view[1] * tr.viewDef->projectionMatrix.At(i + 1 * 4) +
+				view[2] * tr.viewDef->projectionMatrix.At(i + 2 * 4) +
+				view[3] * tr.viewDef->projectionMatrix.At(i + 3 * 4);
 		}
 
 	}
@@ -838,51 +838,52 @@ Sets up the world to view matrix for a given viewParm
 void R_SetViewMatrix( viewDef_t *viewDef ) {
 	idVec3	origin;
 	viewEntity_t *world;
-	float	viewerMatrix[16];
-	static float	s_flipMatrix[16] = {
-		// convert from our coordinate system (looking down X)
-		// to OpenGL's coordinate system (looking down -Z)
+	idMat4 viewerMatrix;
+
+    // convert from our coordinate system (looking down X)
+    // to OpenGL's coordinate system (looking down -Z)
+	static idMat4 s_flipMatrix(
 		0, 0, -1, 0,
 		-1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 0, 1
-	};
+	);
 
 	world = &viewDef->worldSpace;
 
 	memset( world, 0, sizeof(*world) );
 
 	// the model matrix is an identity
-	world->modelMatrix[0*4+0] = 1;
-	world->modelMatrix[1*4+1] = 1;
-	world->modelMatrix[2*4+2] = 1;
+	world->modelMatrix.At(0*4+0) = 1.0f;
+	world->modelMatrix.At(1*4+1) = 1.0f;
+	world->modelMatrix.At(2*4+2) = 1.0f;
 
 	// transform by the camera placement
 	origin = viewDef->renderView.vieworg;
 
-	viewerMatrix[0] = viewDef->renderView.viewaxis[0][0];
-	viewerMatrix[4] = viewDef->renderView.viewaxis[0][1];
-	viewerMatrix[8] = viewDef->renderView.viewaxis[0][2];
-	viewerMatrix[12] = -origin[0] * viewerMatrix[0] + -origin[1] * viewerMatrix[4] + -origin[2] * viewerMatrix[8];
+	viewerMatrix.At(0) = viewDef->renderView.viewaxis[0][0];
+	viewerMatrix.At(4) = viewDef->renderView.viewaxis[0][1];
+	viewerMatrix.At(8) = viewDef->renderView.viewaxis[0][2];
+	viewerMatrix.At(12) = -origin.x * viewerMatrix.At(0) + -origin.y * viewerMatrix.At(4) + -origin.z * viewerMatrix.At(8);
 
-	viewerMatrix[1] = viewDef->renderView.viewaxis[1][0];
-	viewerMatrix[5] = viewDef->renderView.viewaxis[1][1];
-	viewerMatrix[9] = viewDef->renderView.viewaxis[1][2];
-	viewerMatrix[13] = -origin[0] * viewerMatrix[1] + -origin[1] * viewerMatrix[5] + -origin[2] * viewerMatrix[9];
+	viewerMatrix.At(1) = viewDef->renderView.viewaxis[1][0];
+	viewerMatrix.At(5) = viewDef->renderView.viewaxis[1][1];
+	viewerMatrix.At(9) = viewDef->renderView.viewaxis[1][2];
+	viewerMatrix.At(13) = -origin.x * viewerMatrix.At(1) + -origin.y * viewerMatrix.At(5) + -origin.z * viewerMatrix.At(9);
 
-	viewerMatrix[2] = viewDef->renderView.viewaxis[2][0];
-	viewerMatrix[6] = viewDef->renderView.viewaxis[2][1];
-	viewerMatrix[10] = viewDef->renderView.viewaxis[2][2];
-	viewerMatrix[14] = -origin[0] * viewerMatrix[2] + -origin[1] * viewerMatrix[6] + -origin[2] * viewerMatrix[10];
+	viewerMatrix.At(2) = viewDef->renderView.viewaxis[2][0];
+	viewerMatrix.At(6) = viewDef->renderView.viewaxis[2][1];
+	viewerMatrix.At(10) = viewDef->renderView.viewaxis[2][2];
+	viewerMatrix.At(14) = -origin.x * viewerMatrix.At(2) + -origin.y * viewerMatrix.At(6) + -origin.z * viewerMatrix.At(10);
 
-	viewerMatrix[3] = 0;
-	viewerMatrix[7] = 0;
-	viewerMatrix[11] = 0;
-	viewerMatrix[15] = 1;
+	viewerMatrix.At(3) = 0;
+	viewerMatrix.At(7) = 0;
+	viewerMatrix.At(11) = 0;
+	viewerMatrix.At(15) = 1;
 
 	// convert from our coordinate system (looking down X)
 	// to OpenGL's coordinate system (looking down -Z)
-	myGlMultMatrix( viewerMatrix, s_flipMatrix, world->modelViewMatrix );
+    world->modelViewMatrix = viewerMatrix * s_flipMatrix;
 }
 
 /*
@@ -933,28 +934,28 @@ void R_SetupProjection( void ) {
 	ymin += jittery;
 	ymax += jittery;
 
-	tr.viewDef->projectionMatrix[0] = 2 * zNear / width;
-	tr.viewDef->projectionMatrix[4] = 0;
-	tr.viewDef->projectionMatrix[8] = ( xmax + xmin ) / width;	// normally 0
-	tr.viewDef->projectionMatrix[12] = 0;
+	tr.viewDef->projectionMatrix.At(0) = 2 * zNear / width;
+	tr.viewDef->projectionMatrix.At(4) = 0;
+	tr.viewDef->projectionMatrix.At(8) = ( xmax + xmin ) / width;	// normally 0
+	tr.viewDef->projectionMatrix.At(12) = 0;
 
-	tr.viewDef->projectionMatrix[1] = 0;
-	tr.viewDef->projectionMatrix[5] = 2 * zNear / height;
-	tr.viewDef->projectionMatrix[9] = ( ymax + ymin ) / height;	// normally 0
-	tr.viewDef->projectionMatrix[13] = 0;
+	tr.viewDef->projectionMatrix.At(1) = 0;
+	tr.viewDef->projectionMatrix.At(5) = 2 * zNear / height;
+	tr.viewDef->projectionMatrix.At(9) = ( ymax + ymin ) / height;	// normally 0
+	tr.viewDef->projectionMatrix.At(13) = 0;
 
 	// this is the far-plane-at-infinity formulation, and
 	// crunches the Z range slightly so w=0 vertexes do not
 	// rasterize right at the wraparound point
-	tr.viewDef->projectionMatrix[2] = 0;
-	tr.viewDef->projectionMatrix[6] = 0;
-	tr.viewDef->projectionMatrix[10] = -0.999f;
-	tr.viewDef->projectionMatrix[14] = -2.0f * zNear;
+	tr.viewDef->projectionMatrix.At(2) = 0;
+	tr.viewDef->projectionMatrix.At(6) = 0;
+	tr.viewDef->projectionMatrix.At(10) = -0.999f;
+	tr.viewDef->projectionMatrix.At(14) = -2.0f * zNear;
 
-	tr.viewDef->projectionMatrix[3] = 0;
-	tr.viewDef->projectionMatrix[7] = 0;
-	tr.viewDef->projectionMatrix[11] = -1;
-	tr.viewDef->projectionMatrix[15] = 0;
+	tr.viewDef->projectionMatrix.At(3) = 0;
+	tr.viewDef->projectionMatrix.At(7) = 0;
+	tr.viewDef->projectionMatrix.At(11) = -1;
+	tr.viewDef->projectionMatrix.At(15) = 0;
 }
 
 /*

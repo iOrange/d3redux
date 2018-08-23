@@ -194,7 +194,7 @@ void R_SkyboxTexGen( drawSurf_t *surf, const idVec3 &viewOrg ) {
 	int		i;
 	idVec3	localViewOrigin;
 
-	R_GlobalPointToLocal( surf->space->modelMatrix, viewOrg, localViewOrigin );
+	R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), viewOrg, localViewOrigin );
 
 	int numVerts = surf->geo->numVerts;
 	int size = numVerts * sizeof( idVec3 );
@@ -272,7 +272,7 @@ void R_WobbleskyTexGen( drawSurf_t *surf, const idVec3 &viewOrg ) {
 	transform[3] = transform[7] = transform[11] = 0.0f;
 	transform[12] = transform[13] = transform[14] = 0.0f;
 
-	R_GlobalPointToLocal( surf->space->modelMatrix, viewOrg, localViewOrigin );
+	R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), viewOrg, localViewOrigin );
 
 	int numVerts = surf->geo->numVerts;
 	int size = numVerts * sizeof( idVec3 );
@@ -291,77 +291,6 @@ void R_WobbleskyTexGen( drawSurf_t *surf, const idVec3 &viewOrg ) {
 
 	surf->dynamicTexCoords = vertexCache.AllocFrameTemp( texCoords, size );
 }
-
-/*
-=================
-R_SpecularTexGen
-
-Calculates the specular coordinates for cards without vertex programs.
-=================
-*/
-static void R_SpecularTexGen( drawSurf_t *surf, const idVec3 &globalLightOrigin, const idVec3 &viewOrg ) {
-	const srfTriangles_t *tri;
-	idVec3	localLightOrigin;
-	idVec3	localViewOrigin;
-
-	R_GlobalPointToLocal( surf->space->modelMatrix, globalLightOrigin, localLightOrigin );
-	R_GlobalPointToLocal( surf->space->modelMatrix, viewOrg, localViewOrigin );
-
-	tri = surf->geo;
-
-	// FIXME: change to 3 component?
-	int	size = tri->numVerts * sizeof( idVec4 );
-	idVec4 *texCoords = (idVec4 *) _alloca16( size );
-
-#if 1
-
-	SIMDProcessor->CreateSpecularTextureCoords( texCoords, localLightOrigin, localViewOrigin,
-											tri->verts, tri->numVerts, tri->indexes, tri->numIndexes );
-
-#else
-
-	bool *used = (bool *)_alloca16( tri->numVerts * sizeof( used[0] ) );
-	memset( used, 0, tri->numVerts * sizeof( used[0] ) );
-
-	// because the interaction may be a very small subset of the full surface,
-	// it makes sense to only deal with the verts used
-	for ( int j = 0; j < tri->numIndexes; j++ ) {
-		int i = tri->indexes[j];
-		if ( used[i] ) {
-			continue;
-		}
-		used[i] = true;
-
-		float ilength;
-
-		const idDrawVert *v = &tri->verts[i];
-
-		idVec3 lightDir = localLightOrigin - v->xyz;
-		idVec3 viewDir = localViewOrigin - v->xyz;
-
-		ilength = idMath::RSqrt( lightDir * lightDir );
-		lightDir[0] *= ilength;
-		lightDir[1] *= ilength;
-		lightDir[2] *= ilength;
-
-		ilength = idMath::RSqrt( viewDir * viewDir );
-		viewDir[0] *= ilength;
-		viewDir[1] *= ilength;
-		viewDir[2] *= ilength;
-
-		lightDir += viewDir;
-
-		texCoords[i][0] = lightDir * v->tangents[0];
-		texCoords[i][1] = lightDir * v->tangents[1];
-		texCoords[i][2] = lightDir * v->normal;
-		texCoords[i][3] = 1;
-	}
-
-#endif
-
-	surf->dynamicTexCoords = vertexCache.AllocFrameTemp( texCoords, size );
-}
-
 
 //=======================================================================================================
 
@@ -394,12 +323,11 @@ viewEntity_t *R_SetEntityDefViewEntity( idRenderEntityLocal *def ) {
 	vModel->modelDepthHack = def->parms.modelDepthHack;
 	vModel->weaponDepthHack = def->parms.weaponDepthHack;
 
-	R_AxisToModelMatrix( def->parms.axis, def->parms.origin, vModel->modelMatrix );
+	R_AxisToModelMatrix( def->parms.axis, def->parms.origin, vModel->modelMatrix.ToFloatPtr() );
 
 	// we may not have a viewDef if we are just creating shadows at entity creation time
 	if ( tr.viewDef ) {
-		myGlMultMatrix( vModel->modelMatrix, tr.viewDef->worldSpace.modelViewMatrix, vModel->modelViewMatrix );
-
+        vModel->modelViewMatrix = vModel->modelMatrix * tr.viewDef->worldSpace.modelViewMatrix;
 		vModel->next = tr.viewDef->viewEntitys;
 		tr.viewDef->viewEntitys = vModel;
 	}
@@ -624,17 +552,17 @@ void idRenderWorldLocal::CreateLightDefInteractions( idRenderLightLocal *ldef ) 
 
 			// do a check of the entity reference bounds against the light frustum,
 			// trying to avoid creating a viewEntity if it hasn't been already
-			float	modelMatrix[16];
-			float	*m;
+			idMat4 modelMatrix;
+			idMat4* m;
 
 			if ( edef->viewCount == tr.viewCount ) {
-				m = edef->viewEntity->modelMatrix;
+				m = &(edef->viewEntity->modelMatrix);
 			} else {
-				R_AxisToModelMatrix( edef->parms.axis, edef->parms.origin, modelMatrix );
-				m = modelMatrix;
+				R_AxisToModelMatrix( edef->parms.axis, edef->parms.origin, modelMatrix.ToFloatPtr() );
+				m = &modelMatrix;
 			}
 
-			if ( R_CullLocalBox( edef->referenceBounds, m, 6, ldef->frustum ) ) {
+			if ( R_CullLocalBox( edef->referenceBounds, m->ToFloatPtr(), 6, ldef->frustum ) ) {
 				inter->MakeEmpty();
 				continue;
 			}
@@ -689,15 +617,6 @@ void R_LinkLightSurf( const drawSurf_t **link, const srfTriangles_t *tri, const 
 			drawSurf->shaderRegisters = regs;
 			shader->EvaluateRegisters( regs, space->entityDef->parms.shaderParms, tr.viewDef, space->entityDef->parms.referenceSound );
 		}
-
-		// calculate the specular coordinates if we aren't using vertex programs
-		if ( !tr.backEndRendererHasVertexPrograms && !r_skipSpecular.GetBool() && tr.backEndRenderer != BE_ARB ) {
-			R_SpecularTexGen( drawSurf, light->globalLightOrigin, tr.viewDef->renderView.vieworg );
-			// if we failed to allocate space for the specular calculations, drop the surface
-			if ( !drawSurf->dynamicTexCoords ) {
-				return;
-			}
-		}
 	}
 
 	// actually link it in
@@ -748,7 +667,7 @@ idScreenRect R_ClippedLightScissorRectangle( viewLight_t *vLight ) {
 			idPlane		eye, clip;
 			idVec3		ndc;
 
-			R_TransformModelToClip( w[j].ToVec3(), tr.viewDef->worldSpace.modelViewMatrix, tr.viewDef->projectionMatrix, eye, clip );
+			R_TransformModelToClip( w[j].ToVec3(), tr.viewDef->worldSpace.modelViewMatrix.ToFloatPtr(), tr.viewDef->projectionMatrix.ToFloatPtr(), eye, clip );
 
 			if ( clip[3] <= 0.01f ) {
 				clip[3] = 0.01f;
@@ -811,8 +730,8 @@ idScreenRect	R_CalcLightScissorRectangle( viewLight_t *vLight ) {
 
 	tri = vLight->lightDef->frustumTris;
 	for ( int i = 0 ; i < tri->numVerts ; i++ ) {
-		R_TransformModelToClip( tri->verts[i].xyz, tr.viewDef->worldSpace.modelViewMatrix,
-			tr.viewDef->projectionMatrix, eye, clip );
+		R_TransformModelToClip( tri->verts[i].xyz, tr.viewDef->worldSpace.modelViewMatrix.ToFloatPtr(),
+			tr.viewDef->projectionMatrix.ToFloatPtr(), eye, clip );
 
 		// if it is near clipped, clip the winding polygons to the view frustum
 		if ( clip[3] <= 1 ) {
@@ -1022,7 +941,7 @@ void R_AddLightSurfaces( void ) {
 
 			// these shadows will all have valid bounds, and can be culled normally
 			if ( r_useShadowCulling.GetBool() ) {
-				if ( R_CullLocalBox( tri->bounds, tr.viewDef->worldSpace.modelMatrix, 5, tr.viewDef->frustum ) ) {
+				if ( R_CullLocalBox( tri->bounds, tr.viewDef->worldSpace.modelMatrix.ToFloatPtr(), 5, tr.viewDef->frustum ) ) {
 					continue;
 				}
 			}
@@ -1164,7 +1083,7 @@ idRenderModel *R_EntityDefDynamicModel( idRenderEntityLocal *def ) {
 	if ( def->dynamicModel && model->DepthHack() != 0.0f && tr.viewDef ) {
 		idPlane eye, clip;
 		idVec3 ndc;
-		R_TransformModelToClip( def->parms.origin, tr.viewDef->worldSpace.modelViewMatrix, tr.viewDef->projectionMatrix, eye, clip );
+		R_TransformModelToClip( def->parms.origin, tr.viewDef->worldSpace.modelViewMatrix.ToFloatPtr(), tr.viewDef->projectionMatrix.ToFloatPtr(), eye, clip );
 		R_TransformClipToDevice( clip, tr.viewDef, ndc );
 		def->parms.modelDepthHack = model->DepthHack() * ( 1.0f - ndc.z );
 	}
@@ -1398,7 +1317,7 @@ static void R_AddAmbientDrawsurfs( viewEntity_t *vEntity ) {
 			}
 		}
 
-		if ( !R_CullLocalBox( tri->bounds, vEntity->modelMatrix, 5, tr.viewDef->frustum ) ) {
+		if ( !R_CullLocalBox( tri->bounds, vEntity->modelMatrix.ToFloatPtr(), 5, tr.viewDef->frustum ) ) {
 
 			def->visibleCount = tr.viewCount;
 

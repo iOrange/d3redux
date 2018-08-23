@@ -29,11 +29,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "../idlib/precompiled.h"
 #pragma hdrstop
 
-#define JPEG_INTERNALS
-extern "C" {
-#include "jpeg-6/jpeglib.h"
-}
-
 #include "tr_local.h"
 
 #define CIN_system	1
@@ -1283,7 +1278,8 @@ void idCinematicLocal::RoQReset() {
 	status = FMV_LOOPED;
 }
 
-
+//#NOTE_SK: removing jpeg lib
+#if 0
 typedef struct {
   struct jpeg_source_mgr pub;	/* public fields */
 
@@ -1581,6 +1577,8 @@ int JPEGBlit( byte *wStatus, byte *data, int datasize )
   /* And we're done! */
   return 1;
 }
+#endif
+
 
 /*
 ==============
@@ -1647,12 +1645,14 @@ redump:
 			RoQFrameSize = 0;
 			break;
 		case	ROQ_QUAD_JPEG:
+#if 0
 			if (!numQuads) { 
 				normalBuffer0 = t[0];
 				JPEGBlit( image, framedata, RoQFrameSize );
 				memcpy(image+screenDelta, image, samplesPerLine*ysize);
 				numQuads++;
 			}
+#endif
 			break;
 		default:
 			status = FMV_EOF;

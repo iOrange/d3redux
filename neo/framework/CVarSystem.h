@@ -143,10 +143,10 @@ public:
 	int						GetInteger( void ) const { return internalVar->integerValue; }
 	float					GetFloat( void ) const { return internalVar->floatValue; }
 
-	void					SetString( const char *value ) { internalVar->InternalSetString( value ); }
-	void					SetBool( const bool value ) { internalVar->InternalSetBool( value ); }
-	void					SetInteger( const int value ) { internalVar->InternalSetInteger( value ); }
-	void					SetFloat( const float value ) { internalVar->InternalSetFloat( value ); }
+	void					SetString( const char* inValue ) { internalVar->InternalSetString( inValue ); }
+	void					SetBool( const bool inValue ) { internalVar->InternalSetBool( inValue ); }
+	void					SetInteger( const int inValue ) { internalVar->InternalSetInteger( inValue ); }
+	void					SetFloat( const float inValue ) { internalVar->InternalSetFloat( inValue ); }
 
 	void					SetInternalVar( idCVar *cvar ) { internalVar = cvar; }
 
@@ -275,17 +275,23 @@ extern idCVarSystem *		cvarSystem;
 ===============================================================================
 */
 
-ID_INLINE void idCVar::Init( const char *name, const char *value, int flags, const char *description,
-							float valueMin, float valueMax, const char **valueStrings, argCompletion_t valueCompletion ) {
-	this->name = name;
-	this->value = value;
-	this->flags = flags;
-	this->description = description;
-	this->flags = flags | CVAR_STATIC;
-	this->valueMin = valueMin;
-	this->valueMax = valueMax;
-	this->valueStrings = valueStrings;
-	this->valueCompletion = valueCompletion;
+ID_INLINE void idCVar::Init(const char* inName,
+                            const char* inValue,
+                            int inFlags,
+                            const char* inDescription,
+                            float inValueMin,
+                            float inValueMax,
+                            const char** inValueStrings,
+                            argCompletion_t inValueCompletion ) {
+	this->name = inName;
+	this->value = inValue;
+	this->flags = inFlags;
+	this->description = inDescription;
+	this->flags = inFlags | CVAR_STATIC;
+	this->valueMin = inValueMin;
+	this->valueMax = inValueMax;
+	this->valueStrings = inValueStrings;
+	this->valueCompletion = inValueCompletion;
 	this->integerValue = 0;
 	this->floatValue = 0.0f;
 	this->internalVar = this;

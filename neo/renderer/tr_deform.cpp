@@ -93,8 +93,8 @@ static void R_AutospriteDeform( drawSurf_t *surf ) {
 		return;
 	}
 
-	R_GlobalVectorToLocal( surf->space->modelMatrix, tr.viewDef->renderView.viewaxis[1], leftDir );
-	R_GlobalVectorToLocal( surf->space->modelMatrix, tr.viewDef->renderView.viewaxis[2], upDir );
+	R_GlobalVectorToLocal( surf->space->modelMatrix.ToFloatPtr(), tr.viewDef->renderView.viewaxis[1], leftDir );
+	R_GlobalVectorToLocal( surf->space->modelMatrix.ToFloatPtr(), tr.viewDef->renderView.viewaxis[2], upDir );
 
 	if ( tr.viewDef->isMirror ) {
 		leftDir = vec3_origin - leftDir;
@@ -185,7 +185,7 @@ static int edgeVerts[6][2] = {
 	// we need the view direction to project the minor axis of the tube
 	// as the view changes
 	idVec3	localView;
-	R_GlobalPointToLocal( surf->space->modelMatrix, tr.viewDef->renderView.vieworg, localView ); 
+	R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), tr.viewDef->renderView.vieworg, localView ); 
 
 	// this srfTriangles_t and all its indexes and caches are in frame
 	// memory, and will be automatically disposed of
@@ -535,7 +535,7 @@ static void R_FlareDeform( drawSurf_t *surf ) {
 	plane.FromPoints( tri->verts[tri->indexes[0]].xyz, tri->verts[tri->indexes[1]].xyz, tri->verts[tri->indexes[2]].xyz );
 
 	// if viewer is behind the plane, draw nothing
-	R_GlobalPointToLocal( surf->space->modelMatrix, tr.viewDef->renderView.vieworg, localViewer );
+	R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), tr.viewDef->renderView.vieworg, localViewer );
 	float distFromPlane = localViewer * plane.Normal() + plane[3];
 	if ( distFromPlane <= 0 ) {
 		newTri->numIndexes = 0;

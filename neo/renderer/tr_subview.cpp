@@ -128,8 +128,8 @@ bool R_PreciseCullSurface( const drawSurf_t *drawSurf, idBounds &ndcBounds ) {
 		int j;
 		unsigned int pointFlags;
 
-		R_TransformModelToClip( tri->verts[i].xyz, drawSurf->space->modelViewMatrix,
-			tr.viewDef->projectionMatrix, eye, clip );
+		R_TransformModelToClip( tri->verts[i].xyz, drawSurf->space->modelViewMatrix.ToFloatPtr(),
+			tr.viewDef->projectionMatrix.ToFloatPtr(), eye, clip );
 
 		pointFlags = 0;
 		for ( j = 0; j < 3; j++ ) {
@@ -152,7 +152,7 @@ bool R_PreciseCullSurface( const drawSurf_t *drawSurf, idBounds &ndcBounds ) {
 	// backface and frustum cull
 	numTriangles = tri->numIndexes / 3;
 
-	R_GlobalPointToLocal( drawSurf->space->modelMatrix, tr.viewDef->renderView.vieworg, localView );
+	R_GlobalPointToLocal( drawSurf->space->modelMatrix.ToFloatPtr(), tr.viewDef->renderView.vieworg, localView );
 
 	for ( i = 0; i < tri->numIndexes; i += 3 ) {
 		idVec3	dir, normal;
@@ -183,9 +183,9 @@ bool R_PreciseCullSurface( const drawSurf_t *drawSurf, idBounds &ndcBounds ) {
 
 		// now find the exact screen bounds of the clipped triangle
 		w.SetNumPoints( 3 );
-		R_LocalPointToGlobal( drawSurf->space->modelMatrix, v1, w[0].ToVec3() );
-		R_LocalPointToGlobal( drawSurf->space->modelMatrix, v2, w[1].ToVec3() );
-		R_LocalPointToGlobal( drawSurf->space->modelMatrix, v3, w[2].ToVec3() );
+		R_LocalPointToGlobal( drawSurf->space->modelMatrix.ToFloatPtr(), v1, w[0].ToVec3() );
+		R_LocalPointToGlobal( drawSurf->space->modelMatrix.ToFloatPtr(), v2, w[1].ToVec3() );
+		R_LocalPointToGlobal( drawSurf->space->modelMatrix.ToFloatPtr(), v3, w[2].ToVec3() );
 		w[0].s = w[0].t = w[1].s = w[1].t = w[2].s = w[2].t = 0.0f;
 
 		for ( j = 0; j < 4; j++ ) {
@@ -229,7 +229,7 @@ static viewDef_t *R_MirrorViewBySurface( drawSurf_t *drawSurf ) {
 
 	// create plane axis for the portal we are seeing
 	R_PlaneForSurface( drawSurf->geo, originalPlane );
-	R_LocalPlaneToGlobal( drawSurf->space->modelMatrix, originalPlane, plane );
+	R_LocalPlaneToGlobal( drawSurf->space->modelMatrix.ToFloatPtr(), originalPlane, plane );
 
 	surface.origin = plane.Normal() * -plane[3];
 	surface.axis[0] = plane.Normal();
@@ -252,7 +252,7 @@ static viewDef_t *R_MirrorViewBySurface( drawSurf_t *drawSurf ) {
 	idVec3	viewOrigin = ( drawSurf->geo->bounds[0] + drawSurf->geo->bounds[1] ) * 0.5;
 	viewOrigin += ( originalPlane.Normal() * 16 );
 
-	R_LocalPointToGlobal( drawSurf->space->modelMatrix, viewOrigin, parms->initialViewAreaOrigin );
+	R_LocalPointToGlobal( drawSurf->space->modelMatrix.ToFloatPtr(), viewOrigin, parms->initialViewAreaOrigin );
 
 	// set the mirror clip plane
 	parms->numClipPlanes = 1;

@@ -148,6 +148,8 @@ void idImage::UploadCompressedNormalMap( int width, int height, const byte *rgba
 		}
 	}
 
+    //#NOTE_SK: to remove ???
+#if 0
 	if ( mipLevel == 0 ) {
 		// Optionally write out the paletized normal map to a .tga
 		if ( globalImages->image_writeNormalTGAPalletized.GetBool() ) {
@@ -160,6 +162,7 @@ void idImage::UploadCompressedNormalMap( int width, int height, const byte *rgba
 			}
 		}
 	}
+#endif
 
 	if ( glConfig.sharedTexturePaletteAvailable ) {
 		qglTexImage2D( GL_TEXTURE_2D,

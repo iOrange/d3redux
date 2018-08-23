@@ -125,7 +125,7 @@ RB_SimpleSurfaceSetup
 void RB_SimpleSurfaceSetup( const drawSurf_t *drawSurf ) {
 	// change the matrix if needed
 	if ( drawSurf->space != backEnd.currentSpace ) {
-		qglLoadMatrixf( drawSurf->space->modelViewMatrix );
+		qglLoadMatrixf( drawSurf->space->modelViewMatrix.ToFloatPtr() );
 		backEnd.currentSpace = drawSurf->space;
 	}
 
@@ -146,7 +146,7 @@ RB_SimpleWorldSetup
 */
 void RB_SimpleWorldSetup( void ) {
 	backEnd.currentSpace = &backEnd.viewDef->worldSpace;
-	qglLoadMatrixf( backEnd.viewDef->worldSpace.modelViewMatrix );
+	qglLoadMatrixf( backEnd.viewDef->worldSpace.modelViewMatrix.ToFloatPtr() );
 
 	backEnd.currentScissor = backEnd.viewDef->scissor;
 	qglScissor( backEnd.viewDef->viewport.x1 + backEnd.currentScissor.x1, 
@@ -868,7 +868,7 @@ static void RB_ShowViewEntitys( viewEntity_t *vModels ) {
 	for ( ; vModels ; vModels = vModels->next ) {
 		idBounds	b;
 
-		qglLoadMatrixf( vModels->modelViewMatrix );
+		qglLoadMatrixf( vModels->modelViewMatrix.ToFloatPtr() );
 
 		if ( !vModels->entityDef ) {
 			continue;
@@ -1201,12 +1201,12 @@ static void RB_ShowNormals( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 			}
 			
 			for ( j = 0 ; j < tri->numVerts ; j++ ) {
-				R_LocalPointToGlobal( drawSurf->space->modelMatrix, tri->verts[j].xyz + tri->verts[j].tangents[0] + tri->verts[j].normal * 0.2f, pos );
+				R_LocalPointToGlobal( drawSurf->space->modelMatrix.ToFloatPtr(), tri->verts[j].xyz + tri->verts[j].tangents[0] + tri->verts[j].normal * 0.2f, pos );
 				RB_DrawText( va( "%d", j ), pos, 0.01f, colorWhite, backEnd.viewDef->renderView.viewaxis, 1 );
 			}
 
 			for ( j = 0 ; j < tri->numIndexes; j += 3 ) {
-				R_LocalPointToGlobal( drawSurf->space->modelMatrix, ( tri->verts[ tri->indexes[ j + 0 ] ].xyz + tri->verts[ tri->indexes[ j + 1 ] ].xyz + tri->verts[ tri->indexes[ j + 2 ] ].xyz ) * ( 1.0f / 3.0f ) + tri->verts[ tri->indexes[ j + 0 ] ].normal * 0.2f, pos );
+				R_LocalPointToGlobal( drawSurf->space->modelMatrix.ToFloatPtr(), ( tri->verts[ tri->indexes[ j + 0 ] ].xyz + tri->verts[ tri->indexes[ j + 1 ] ].xyz + tri->verts[ tri->indexes[ j + 2 ] ].xyz ) * ( 1.0f / 3.0f ) + tri->verts[ tri->indexes[ j + 0 ] ].normal * 0.2f, pos );
 				RB_DrawText( va( "%d", j / 3 ), pos, 0.01f, colorCyan, backEnd.viewDef->renderView.viewaxis, 1 );
 			}
 		}

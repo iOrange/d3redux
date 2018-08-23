@@ -11,10 +11,10 @@
     <LocalDebuggerCommandArguments>+set fs_basepath "C:\Program Files (x86)\Steam\steamapps\common\doom 3" +set com_allowConsole 1 +set si_pure 0</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommand>$(OutDir)DOOM3.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>+set com_allowConsole 1 +set si_pure 0 +set s_useOpenAL 1</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>+set com_allowConsole 1 +set si_pure 0 +set s_useOpenAL 1 +set r_renderer arb2</LocalDebuggerCommandArguments>
     <LocalDebuggerWorkingDirectory>$(ProjectDir)..\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommand>$(OutDir)DOOM3.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dedicated Debug with inlines|Win32'">
     <LocalDebuggerCommand>$(OutDir)DOOM3.exe</LocalDebuggerCommand>

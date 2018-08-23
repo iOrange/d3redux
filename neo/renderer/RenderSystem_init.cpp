@@ -209,9 +209,6 @@ idCVar r_showSkel( "r_showSkel", "0", CVAR_RENDERER | CVAR_INTEGER, "draw the sk
 idCVar r_jointNameScale( "r_jointNameScale", "0.02", CVAR_RENDERER | CVAR_FLOAT, "size of joint names when r_showskel is set to 1" );
 idCVar r_jointNameOffset( "r_jointNameOffset", "0.5", CVAR_RENDERER | CVAR_FLOAT, "offset of joint names when r_showskel is set to 1" );
 
-idCVar r_cgVertexProfile( "r_cgVertexProfile", "best", CVAR_RENDERER | CVAR_ARCHIVE, "arbvp1, vp20, vp30" );     
-idCVar r_cgFragmentProfile( "r_cgFragmentProfile", "best", CVAR_RENDERER | CVAR_ARCHIVE, "arbfp1, fp30" );
-
 idCVar r_debugLineDepthTest( "r_debugLineDepthTest", "0", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "perform depth test on debug lines" );
 idCVar r_debugLineWidth( "r_debugLineWidth", "1", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_BOOL, "width of debug lines" );
 idCVar r_debugArrowStep( "r_debugArrowStep", "120", CVAR_RENDERER | CVAR_ARCHIVE | CVAR_INTEGER, "step size of arrow cone line rotation in degrees", 0, 120 );
@@ -257,22 +254,6 @@ void (APIENTRY *qglTexImage3D)(GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, 
 void (APIENTRY * qglColorTableEXT)( int, int, int, int, int, const void * );
 
 
-// ATI_fragment_shader
-PFNGLGENFRAGMENTSHADERSATIPROC			qglGenFragmentShadersATI;
-PFNGLBINDFRAGMENTSHADERATIPROC			qglBindFragmentShaderATI;
-PFNGLDELETEFRAGMENTSHADERATIPROC		qglDeleteFragmentShaderATI;
-PFNGLBEGINFRAGMENTSHADERATIPROC			qglBeginFragmentShaderATI;
-PFNGLENDFRAGMENTSHADERATIPROC			qglEndFragmentShaderATI;
-PFNGLPASSTEXCOORDATIPROC				qglPassTexCoordATI;
-PFNGLSAMPLEMAPATIPROC					qglSampleMapATI;
-PFNGLCOLORFRAGMENTOP1ATIPROC			qglColorFragmentOp1ATI;
-PFNGLCOLORFRAGMENTOP2ATIPROC			qglColorFragmentOp2ATI;
-PFNGLCOLORFRAGMENTOP3ATIPROC			qglColorFragmentOp3ATI;
-PFNGLALPHAFRAGMENTOP1ATIPROC			qglAlphaFragmentOp1ATI;
-PFNGLALPHAFRAGMENTOP2ATIPROC			qglAlphaFragmentOp2ATI;
-PFNGLALPHAFRAGMENTOP3ATIPROC			qglAlphaFragmentOp3ATI;
-PFNGLSETFRAGMENTSHADERCONSTANTATIPROC	qglSetFragmentShaderConstantATI;
-
 // EXT_stencil_two_side
 PFNGLACTIVESTENCILFACEEXTPROC			qglActiveStencilFaceEXT;
 
@@ -309,6 +290,51 @@ PFNGLPROGRAMLOCALPARAMETER4FVARBPROC	qglProgramLocalParameter4fvARB;
 
 // GL_EXT_depth_bounds_test
 PFNGLDEPTHBOUNDSEXTPROC                 qglDepthBoundsEXT;
+
+// GLSL shaders
+PFNGLDELETEOBJECTARBPROC                qglDeleteObjectARB = NULL;
+PFNGLGETHANDLEARBPROC                   qglGetHandleARB = NULL;
+PFNGLDETACHOBJECTARBPROC                qglDetachObjectARB = NULL;
+PFNGLCREATESHADEROBJECTARBPROC          qglCreateShaderObjectARB = NULL;
+PFNGLSHADERSOURCEARBPROC                qglShaderSourceARB = NULL;
+PFNGLCOMPILESHADERARBPROC               qglCompileShaderARB = NULL;
+PFNGLCREATEPROGRAMOBJECTARBPROC         qglCreateProgramObjectARB = NULL;
+PFNGLATTACHOBJECTARBPROC                qglAttachObjectARB = NULL;
+PFNGLLINKPROGRAMARBPROC                 qglLinkProgramARB = NULL;
+PFNGLUSEPROGRAMOBJECTARBPROC            qglUseProgramObjectARB = NULL;
+PFNGLVALIDATEPROGRAMARBPROC             qglValidateProgramARB = NULL;
+PFNGLUNIFORM1FARBPROC                   qglUniform1fARB = NULL;
+PFNGLUNIFORM2FARBPROC                   qglUniform2fARB = NULL;
+PFNGLUNIFORM3FARBPROC                   qglUniform3fARB = NULL;
+PFNGLUNIFORM4FARBPROC                   qglUniform4fARB = NULL;
+PFNGLUNIFORM1IARBPROC                   qglUniform1iARB = NULL;
+PFNGLUNIFORM2IARBPROC                   qglUniform2iARB = NULL;
+PFNGLUNIFORM3IARBPROC                   qglUniform3iARB = NULL;
+PFNGLUNIFORM4IARBPROC                   qglUniform4iARB = NULL;
+PFNGLUNIFORM1FVARBPROC                  qglUniform1fvARB = NULL;
+PFNGLUNIFORM2FVARBPROC                  qglUniform2fvARB = NULL;
+PFNGLUNIFORM3FVARBPROC                  qglUniform3fvARB = NULL;
+PFNGLUNIFORM4FVARBPROC                  qglUniform4fvARB = NULL;
+PFNGLUNIFORM1IVARBPROC                  qglUniform1ivARB = NULL;
+PFNGLUNIFORM2IVARBPROC                  qglUniform2ivARB = NULL;
+PFNGLUNIFORM3IVARBPROC                  qglUniform3ivARB = NULL;
+PFNGLUNIFORM4IVARBPROC                  qglUniform4ivARB = NULL;
+PFNGLUNIFORMMATRIX2FVARBPROC            qglUniformMatrix2fvARB = NULL;
+PFNGLUNIFORMMATRIX3FVARBPROC            qglUniformMatrix3fvARB = NULL;
+PFNGLUNIFORMMATRIX4FVARBPROC            qglUniformMatrix4fvARB = NULL;
+PFNGLGETOBJECTPARAMETERFVARBPROC        qglGetObjectParameterfvARB = NULL;
+PFNGLGETOBJECTPARAMETERIVARBPROC        qglGetObjectParameterivARB = NULL;
+PFNGLGETINFOLOGARBPROC                  qglGetInfoLogARB = NULL;
+PFNGLGETATTACHEDOBJECTSARBPROC          qglGetAttachedObjectsARB = NULL;
+PFNGLGETUNIFORMLOCATIONARBPROC          qglGetUniformLocationARB = NULL;
+PFNGLGETACTIVEUNIFORMARBPROC            qglGetActiveUniformARB = NULL;
+PFNGLGETUNIFORMFVARBPROC                qglGetUniformfvARB = NULL;
+PFNGLGETUNIFORMIVARBPROC                qglGetUniformivARB = NULL;
+PFNGLGETSHADERSOURCEARBPROC             qglGetShaderSourceARB = NULL;
+PFNGLBINDATTRIBLOCATIONARBPROC          qglBindAttribLocationARB = NULL;
+PFNGLGETACTIVEATTRIBARBPROC             qglGetActiveAttribARB = NULL;
+PFNGLGETATTRIBLOCATIONARBPROC           qglGetAttribLocationARB = NULL;
+PFNGLGETVERTEXATTRIBFVARBPROC           qglGetVertexAttribfvARB = NULL;
 
 /*
 =================
@@ -457,29 +483,6 @@ static void R_CheckPortableExtensions( void ) {
 		}
 	}
 
-	// GL_ATI_fragment_shader
-	glConfig.atiFragmentShaderAvailable = R_CheckExtension( "GL_ATI_fragment_shader" );
-	if (! glConfig.atiFragmentShaderAvailable ) {
-		// only on OSX: ATI_fragment_shader is faked through ATI_text_fragment_shader (macosx_glimp.cpp)
-		glConfig.atiFragmentShaderAvailable = R_CheckExtension( "GL_ATI_text_fragment_shader" );
-	}
-	if ( glConfig.atiFragmentShaderAvailable ) {
-		qglGenFragmentShadersATI = (PFNGLGENFRAGMENTSHADERSATIPROC)GLimp_ExtensionPointer( "glGenFragmentShadersATI" );
-		qglBindFragmentShaderATI = (PFNGLBINDFRAGMENTSHADERATIPROC)GLimp_ExtensionPointer( "glBindFragmentShaderATI" );
-		qglDeleteFragmentShaderATI = (PFNGLDELETEFRAGMENTSHADERATIPROC)GLimp_ExtensionPointer( "glDeleteFragmentShaderATI" );
-		qglBeginFragmentShaderATI = (PFNGLBEGINFRAGMENTSHADERATIPROC)GLimp_ExtensionPointer( "glBeginFragmentShaderATI" );
-		qglEndFragmentShaderATI = (PFNGLENDFRAGMENTSHADERATIPROC)GLimp_ExtensionPointer( "glEndFragmentShaderATI" );
-		qglPassTexCoordATI = (PFNGLPASSTEXCOORDATIPROC)GLimp_ExtensionPointer( "glPassTexCoordATI" );
-		qglSampleMapATI = (PFNGLSAMPLEMAPATIPROC)GLimp_ExtensionPointer( "glSampleMapATI" );
-		qglColorFragmentOp1ATI = (PFNGLCOLORFRAGMENTOP1ATIPROC)GLimp_ExtensionPointer( "glColorFragmentOp1ATI" );
-		qglColorFragmentOp2ATI = (PFNGLCOLORFRAGMENTOP2ATIPROC)GLimp_ExtensionPointer( "glColorFragmentOp2ATI" );
-		qglColorFragmentOp3ATI = (PFNGLCOLORFRAGMENTOP3ATIPROC)GLimp_ExtensionPointer( "glColorFragmentOp3ATI" );
-		qglAlphaFragmentOp1ATI = (PFNGLALPHAFRAGMENTOP1ATIPROC)GLimp_ExtensionPointer( "glAlphaFragmentOp1ATI" );
-		qglAlphaFragmentOp2ATI = (PFNGLALPHAFRAGMENTOP2ATIPROC)GLimp_ExtensionPointer( "glAlphaFragmentOp2ATI" );
-		qglAlphaFragmentOp3ATI = (PFNGLALPHAFRAGMENTOP3ATIPROC)GLimp_ExtensionPointer( "glAlphaFragmentOp3ATI" );
-		qglSetFragmentShaderConstantATI = (PFNGLSETFRAGMENTSHADERCONSTANTATIPROC)GLimp_ExtensionPointer( "glSetFragmentShaderConstantATI" );
-	}
-
 	// ARB_vertex_buffer_object
 	glConfig.ARBVertexBufferObjectAvailable = R_CheckExtension( "GL_ARB_vertex_buffer_object" );
 	if(glConfig.ARBVertexBufferObjectAvailable) {
@@ -523,6 +526,53 @@ static void R_CheckPortableExtensions( void ) {
 		}
 	}
 
+    glConfig.glslShadersAvailable = R_CheckExtension("GL_ARB_shader_objects");
+    if (glConfig.glslShadersAvailable) {
+        qglDeleteObjectARB = (PFNGLDELETEOBJECTARBPROC)GLimp_ExtensionPointer("glDeleteObjectARB");
+        qglGetHandleARB = (PFNGLGETHANDLEARBPROC)GLimp_ExtensionPointer("glGetHandleARB");
+        qglDetachObjectARB = (PFNGLDETACHOBJECTARBPROC)GLimp_ExtensionPointer("glDetachObjectARB");
+        qglCreateShaderObjectARB = (PFNGLCREATESHADEROBJECTARBPROC)GLimp_ExtensionPointer("glCreateShaderObjectARB");
+        qglShaderSourceARB = (PFNGLSHADERSOURCEARBPROC)GLimp_ExtensionPointer("glShaderSourceARB");
+        qglCompileShaderARB = (PFNGLCOMPILESHADERARBPROC)GLimp_ExtensionPointer("glCompileShaderARB");
+        qglCreateProgramObjectARB = (PFNGLCREATEPROGRAMOBJECTARBPROC)GLimp_ExtensionPointer("glCreateProgramObjectARB");
+        qglAttachObjectARB = (PFNGLATTACHOBJECTARBPROC)GLimp_ExtensionPointer("glAttachObjectARB");
+        qglLinkProgramARB = (PFNGLLINKPROGRAMARBPROC)GLimp_ExtensionPointer("glLinkProgramARB");
+        qglUseProgramObjectARB = (PFNGLUSEPROGRAMOBJECTARBPROC)GLimp_ExtensionPointer("glUseProgramObjectARB");
+        qglValidateProgramARB = (PFNGLVALIDATEPROGRAMARBPROC)GLimp_ExtensionPointer("glValidateProgramARB");
+        qglUniform1fARB = (PFNGLUNIFORM1FARBPROC)GLimp_ExtensionPointer("glUniform1fARB");
+        qglUniform2fARB = (PFNGLUNIFORM2FARBPROC)GLimp_ExtensionPointer("glUniform2fARB");
+        qglUniform3fARB = (PFNGLUNIFORM3FARBPROC)GLimp_ExtensionPointer("glUniform3fARB");
+        qglUniform4fARB = (PFNGLUNIFORM4FARBPROC)GLimp_ExtensionPointer("glUniform4fARB");
+        qglUniform1iARB = (PFNGLUNIFORM1IARBPROC)GLimp_ExtensionPointer("glUniform1iARB");
+        qglUniform2iARB = (PFNGLUNIFORM2IARBPROC)GLimp_ExtensionPointer("glUniform2iARB");
+        qglUniform3iARB = (PFNGLUNIFORM3IARBPROC)GLimp_ExtensionPointer("glUniform3iARB");
+        qglUniform4iARB = (PFNGLUNIFORM4IARBPROC)GLimp_ExtensionPointer("glUniform4iARB");
+        qglUniform1fvARB = (PFNGLUNIFORM1FVARBPROC)GLimp_ExtensionPointer("glUniform1fvARB");
+        qglUniform2fvARB = (PFNGLUNIFORM2FVARBPROC)GLimp_ExtensionPointer("glUniform2fvARB");
+        qglUniform3fvARB = (PFNGLUNIFORM3FVARBPROC)GLimp_ExtensionPointer("glUniform3fvARB");
+        qglUniform4fvARB = (PFNGLUNIFORM4FVARBPROC)GLimp_ExtensionPointer("glUniform4fvARB");
+        qglUniform1ivARB = (PFNGLUNIFORM1IVARBPROC)GLimp_ExtensionPointer("glUniform1ivARB");
+        qglUniform2ivARB = (PFNGLUNIFORM2IVARBPROC)GLimp_ExtensionPointer("glUniform2ivARB");
+        qglUniform3ivARB = (PFNGLUNIFORM3IVARBPROC)GLimp_ExtensionPointer("glUniform3ivARB");
+        qglUniform4ivARB = (PFNGLUNIFORM4IVARBPROC)GLimp_ExtensionPointer("glUniform4ivARB");
+        qglUniformMatrix2fvARB = (PFNGLUNIFORMMATRIX2FVARBPROC)GLimp_ExtensionPointer("glUniformMatrix2fvARB");
+        qglUniformMatrix3fvARB = (PFNGLUNIFORMMATRIX3FVARBPROC)GLimp_ExtensionPointer("glUniformMatrix3fvARB");
+        qglUniformMatrix4fvARB = (PFNGLUNIFORMMATRIX4FVARBPROC)GLimp_ExtensionPointer("glUniformMatrix4fvARB");
+        qglGetObjectParameterfvARB = (PFNGLGETOBJECTPARAMETERFVARBPROC)GLimp_ExtensionPointer("glGetObjectParameterfvARB");
+        qglGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)GLimp_ExtensionPointer("glGetObjectParameterivARB");
+        qglGetInfoLogARB = (PFNGLGETINFOLOGARBPROC)GLimp_ExtensionPointer("glGetInfoLogARB");
+        qglGetAttachedObjectsARB = (PFNGLGETATTACHEDOBJECTSARBPROC)GLimp_ExtensionPointer("glGetAttachedObjectsARB");
+        qglGetUniformLocationARB = (PFNGLGETUNIFORMLOCATIONARBPROC)GLimp_ExtensionPointer("glGetUniformLocationARB");
+        qglGetActiveUniformARB = (PFNGLGETACTIVEUNIFORMARBPROC)GLimp_ExtensionPointer("glGetActiveUniformARB");
+        qglGetUniformfvARB = (PFNGLGETUNIFORMFVARBPROC)GLimp_ExtensionPointer("glGetUniformfvARB");
+        qglGetUniformivARB = (PFNGLGETUNIFORMIVARBPROC)GLimp_ExtensionPointer("glGetUniformivARB");
+        qglGetShaderSourceARB = (PFNGLGETSHADERSOURCEARBPROC)GLimp_ExtensionPointer("glGetShaderSourceARB");
+        qglBindAttribLocationARB = (PFNGLBINDATTRIBLOCATIONARBPROC)GLimp_ExtensionPointer("glBindAttribLocationARB");
+        qglGetActiveAttribARB = (PFNGLGETACTIVEATTRIBARBPROC)GLimp_ExtensionPointer("glGetActiveAttribARB");
+        qglGetAttribLocationARB = (PFNGLGETATTRIBLOCATIONARBPROC)GLimp_ExtensionPointer("glGetAttribLocationARB");
+        qglGetVertexAttribfvARB = (PFNGLGETVERTEXATTRIBFVARBPROC)GLimp_ExtensionPointer("glGetVertexAttribfvARB");
+    }
+
 	// check for minimum set
 	if ( !glConfig.multitextureAvailable || !glConfig.textureEnvCombineAvailable || !glConfig.cubeMapAvailable
 		|| !glConfig.envDot3Available ) {
@@ -561,8 +611,10 @@ vidmode_t r_vidModes[] = {
     { "Mode  4: 800x600",		800,	600 },
     { "Mode  5: 1024x768",		1024,	768 },
     { "Mode  6: 1152x864",		1152,	864 },
-    { "Mode  7: 1280x1024",		1280,	1024 },
-    { "Mode  8: 1600x1200",		1600,	1200 },
+    { "Mode  7: 1280x720",		1280,	720 },
+    { "Mode  8: 1280x1024",		1280,	1024 },
+    { "Mode  9: 1600x1200",		1600,	1200 },
+    { "Mode 10: 1920x1080",		1920,	1080 },
 };
 static int	s_numVidModes = ( sizeof( r_vidModes ) / sizeof( r_vidModes[0] ) );
 
@@ -687,13 +739,15 @@ void R_InitOpenGL( void ) {
 
 	// parse our vertex and fragment programs, possibly disably support for
 	// one of the paths if there was an error
-	R_NV10_Init();
-	R_NV20_Init();
-	R_R200_Init();
 	R_ARB2_Init();
+    //#TODO_SK: GL33 here
+    R_GL33_Init();
 
 	cmdSystem->AddCommand( "reloadARBprograms", R_ReloadARBPrograms_f, CMD_FL_RENDERER, "reloads ARB programs" );
 	R_ReloadARBPrograms_f( idCmdArgs() );
+
+    cmdSystem->AddCommand("reloadGLSLprograms", R_ReloadGLSLPrograms_f, CMD_FL_RENDERER, "reloads GLSL programs");
+    R_ReloadGLSLPrograms_f(idCmdArgs());
 
 	// allocate the vertex array range or vertex objects
 	vertexCache.Init();
@@ -1802,31 +1856,18 @@ void GfxInfo_f( const idCmdArgs &args ) {
 	common->Printf( "CPU: %s\n", Sys_GetProcessorString() );
 
 	const char *active[2] = { "", " (ACTIVE)" };
-	common->Printf( "ARB path ENABLED%s\n", active[tr.backEndRenderer == BE_ARB] );
-
-	if ( glConfig.allowNV10Path ) {
-		common->Printf( "NV10 path ENABLED%s\n", active[tr.backEndRenderer == BE_NV10] );
-	} else {
-		common->Printf( "NV10 path disabled\n" );
-	}
-
-	if ( glConfig.allowNV20Path ) {
-		common->Printf( "NV20 path ENABLED%s\n", active[tr.backEndRenderer == BE_NV20] );
-	} else {
-		common->Printf( "NV20 path disabled\n" );
-	}
-
-	if ( glConfig.allowR200Path ) {
-		common->Printf( "R200 path ENABLED%s\n", active[tr.backEndRenderer == BE_R200] );
-	} else {
-		common->Printf( "R200 path disabled\n" );
-	}
 
 	if ( glConfig.allowARB2Path ) {
 		common->Printf( "ARB2 path ENABLED%s\n", active[tr.backEndRenderer == BE_ARB2] );
 	} else {
 		common->Printf( "ARB2 path disabled\n" );
 	}
+
+    if (glConfig.allowGL33Path) {
+        common->Printf("GL33 path ENABLED%s\n", active[tr.backEndRenderer == BE_GL33]);
+    } else {
+        common->Printf("GL33 path disabled\n");
+    }
 
 	//=============================
 
@@ -2160,9 +2201,9 @@ void idRenderSystemLocal::Init( void ) {
 	renderModelManager->Init();
 
 	// set the identity space
-	identitySpace.modelMatrix[0*4+0] = 1.0f;
-	identitySpace.modelMatrix[1*4+1] = 1.0f;
-	identitySpace.modelMatrix[2*4+2] = 1.0f;
+	identitySpace.modelMatrix.At(0*4+0) = 1.0f;
+	identitySpace.modelMatrix.At(1*4+1) = 1.0f;
+	identitySpace.modelMatrix.At(2*4+2) = 1.0f;
 
 	// determine which back end we will use
 	// ??? this is invalid here as there is not enough information to set it up correctly
@@ -2318,7 +2359,7 @@ idRenderSystemLocal::GetCardCaps
 ========================
 */
 void idRenderSystemLocal::GetCardCaps( bool &oldCard, bool &nv10or20 ) {
-	nv10or20 = ( tr.backEndRenderer == BE_NV10 || tr.backEndRenderer == BE_NV20 );
-	oldCard = ( tr.backEndRenderer == BE_ARB || tr.backEndRenderer == BE_R200 || tr.backEndRenderer == BE_NV10 || tr.backEndRenderer == BE_NV20 );
+    nv10or20 = false;
+    oldCard = false;
 }
 

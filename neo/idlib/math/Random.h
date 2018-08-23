@@ -55,12 +55,12 @@ private:
 	int					seed;
 };
 
-ID_INLINE idRandom::idRandom( int seed ) {
-	this->seed = seed;
+ID_INLINE idRandom::idRandom( int inSeed ) {
+	this->seed = inSeed;
 }
 
-ID_INLINE void idRandom::SetSeed( int seed ) {
-	this->seed = seed;
+ID_INLINE void idRandom::SetSeed( int inSeed ) {
+	this->seed = inSeed;
 }
 
 ID_INLINE int idRandom::GetSeed( void ) const {
@@ -117,12 +117,12 @@ private:
 	static const unsigned long	IEEE_MASK = 0x007fffff;
 };
 
-ID_INLINE idRandom2::idRandom2( unsigned long seed ) {
-	this->seed = seed;
+ID_INLINE idRandom2::idRandom2( unsigned long inSeed ) {
+	this->seed = inSeed;
 }
 
-ID_INLINE void idRandom2::SetSeed( unsigned long seed ) {
-	this->seed = seed;
+ID_INLINE void idRandom2::SetSeed( unsigned long inSeed ) {
+	this->seed = inSeed;
 }
 
 ID_INLINE unsigned long idRandom2::GetSeed( void ) const {

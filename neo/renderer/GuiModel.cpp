@@ -158,7 +158,7 @@ void idGuiModel::ReadFromDemo( idDemoFile *demo ) {
 EmitSurface
 ================
 */
-void idGuiModel::EmitSurface( guiModelSurface_t *surf, float modelMatrix[16], float modelViewMatrix[16], bool depthHack ) {
+void idGuiModel::EmitSurface(guiModelSurface_t* surf, const idMat4& modelMatrix, const idMat4& modelViewMatrix, bool depthHack) {
 	srfTriangles_t	*tri;
 
 	if ( surf->numVerts == 0 ) {
@@ -192,8 +192,8 @@ void idGuiModel::EmitSurface( guiModelSurface_t *surf, float modelMatrix[16], fl
 	memcpy( renderEntity.shaderParms, surf->color, sizeof( surf->color ) );
 
 	viewEntity_t *guiSpace = (viewEntity_t *)R_ClearedFrameAlloc( sizeof( *guiSpace ) );
-	memcpy( guiSpace->modelMatrix, modelMatrix, sizeof( guiSpace->modelMatrix ) );
-	memcpy( guiSpace->modelViewMatrix, modelViewMatrix, sizeof( guiSpace->modelViewMatrix ) );
+    guiSpace->modelMatrix = modelMatrix;
+    guiSpace->modelViewMatrix = modelViewMatrix;
 	guiSpace->weaponDepthHack = depthHack;
 
 	// add the surface, which might recursively create another gui
@@ -205,15 +205,12 @@ void idGuiModel::EmitSurface( guiModelSurface_t *surf, float modelMatrix[16], fl
 EmitToCurrentView
 ====================
 */
-void idGuiModel::EmitToCurrentView( float modelMatrix[16], bool depthHack ) {
-	float	modelViewMatrix[16];
+void idGuiModel::EmitToCurrentView(const idMat4& modelMatrix, bool depthHack ) {
+    idMat4 modelViewMatrix = modelMatrix * tr.viewDef->worldSpace.modelViewMatrix;
 
-	myGlMultMatrix( modelMatrix, tr.viewDef->worldSpace.modelViewMatrix, 
-			modelViewMatrix );
-
-	for ( int i = 0 ; i < surfaces.Num() ; i++ ) {
-		EmitSurface( &surfaces[i], modelMatrix, modelViewMatrix, depthHack );
-	}
+    for (int i = 0 ; i < surfaces.Num(); ++i) {
+        EmitSurface(&surfaces[i], modelMatrix, modelViewMatrix, depthHack);
+    }
 }
 
 /*
@@ -265,18 +262,18 @@ void idGuiModel::EmitFullScreen( void ) {
 	viewDef->floatTime = tr.frameShaderTime;
 
 	// qglOrtho( 0, 640, 480, 0, 0, 1 );		// always assume 640x480 virtual coordinates
-	viewDef->projectionMatrix[0] = 2.0f / 640.0f;
-	viewDef->projectionMatrix[5] = -2.0f / 480.0f;
-	viewDef->projectionMatrix[10] = -2.0f / 1.0f;
-	viewDef->projectionMatrix[12] = -1.0f;
-	viewDef->projectionMatrix[13] = 1.0f;
-	viewDef->projectionMatrix[14] = -1.0f;
-	viewDef->projectionMatrix[15] = 1.0f;
+	viewDef->projectionMatrix.At(0) = 2.0f / 640.0f;
+	viewDef->projectionMatrix.At(5) = -2.0f / 480.0f;
+	viewDef->projectionMatrix.At(10) = -2.0f / 1.0f;
+	viewDef->projectionMatrix.At(12) = -1.0f;
+	viewDef->projectionMatrix.At(13) = 1.0f;
+	viewDef->projectionMatrix.At(14) = -1.0f;
+	viewDef->projectionMatrix.At(15) = 1.0f;
 
-	viewDef->worldSpace.modelViewMatrix[0] = 1.0f;
-	viewDef->worldSpace.modelViewMatrix[5] = 1.0f;
-	viewDef->worldSpace.modelViewMatrix[10] = 1.0f;
-	viewDef->worldSpace.modelViewMatrix[15] = 1.0f;
+	viewDef->worldSpace.modelViewMatrix.At(0) = 1.0f;
+	viewDef->worldSpace.modelViewMatrix.At(5) = 1.0f;
+	viewDef->worldSpace.modelViewMatrix.At(10) = 1.0f;
+	viewDef->worldSpace.modelViewMatrix.At(15) = 1.0f;
 
 	viewDef->maxDrawSurfs = surfaces.Num();
 	viewDef->drawSurfs = (drawSurf_t **)R_FrameAlloc( viewDef->maxDrawSurfs * sizeof( viewDef->drawSurfs[0] ) );

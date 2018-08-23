@@ -106,14 +106,14 @@ extern idVec2 vec2_origin;
 ID_INLINE idVec2::idVec2( void ) {
 }
 
-ID_INLINE idVec2::idVec2( const float x, const float y ) {
-	this->x = x;
-	this->y = y;
+ID_INLINE idVec2::idVec2( const float inX, const float inY ) {
+	this->x = inX;
+	this->y = inY;
 }
 
-ID_INLINE void idVec2::Set( const float x, const float y ) {
-	this->x = x;
-	this->y = y;
+ID_INLINE void idVec2::Set( const float inX, const float inY ) {
+	this->x = inX;
+	this->y = inY;
 }
 
 ID_INLINE void idVec2::Zero( void ) {
@@ -392,10 +392,10 @@ extern idVec3 vec3_origin;
 ID_INLINE idVec3::idVec3( void ) {
 }
 
-ID_INLINE idVec3::idVec3( const float x, const float y, const float z ) {
-	this->x = x;
-	this->y = y;
-	this->z = z;
+ID_INLINE idVec3::idVec3( const float inX, const float inY, const float inZ ) {
+	this->x = inX;
+	this->y = inY;
+	this->z = inZ;
 }
 
 ID_INLINE float idVec3::operator[]( const int index ) const {
@@ -406,10 +406,10 @@ ID_INLINE float &idVec3::operator[]( const int index ) {
 	return ( &x )[ index ];
 }
 
-ID_INLINE void idVec3::Set( const float x, const float y, const float z ) {
-	this->x = x;
-	this->y = y;
-	this->z = z;
+ID_INLINE void idVec3::Set( const float inX, const float inY, const float inZ ) {
+	this->x = inX;
+	this->y = inY;
+	this->z = inZ;
 }
 
 ID_INLINE void idVec3::Zero( void ) {
@@ -863,18 +863,18 @@ extern idVec4 vec4_origin;
 ID_INLINE idVec4::idVec4( void ) {
 }
 
-ID_INLINE idVec4::idVec4( const float x, const float y, const float z, const float w ) {
-	this->x = x;
-	this->y = y;
-	this->z = z;
-	this->w = w;
+ID_INLINE idVec4::idVec4( const float inX, const float inY, const float inZ, const float inW ) {
+	this->x = inX;
+	this->y = inY;
+	this->z = inZ;
+	this->w = inW;
 }
 
-ID_INLINE void idVec4::Set( const float x, const float y, const float z, const float w ) {
-	this->x = x;
-	this->y = y;
-	this->z = z;
-	this->w = w;
+ID_INLINE void idVec4::Set( const float inX, const float inY, const float inZ, const float inW ) {
+	this->x = inX;
+	this->y = inY;
+	this->z = inZ;
+	this->w = inW;
 }
 
 ID_INLINE void idVec4::Zero( void ) {
@@ -1942,18 +1942,18 @@ public:
 ID_INLINE idPolar3::idPolar3( void ) {
 }
 
-ID_INLINE idPolar3::idPolar3( const float radius, const float theta, const float phi ) {
+ID_INLINE idPolar3::idPolar3( const float inRadius, const float inTheta, const float inPhi ) {
 	assert( radius > 0 );
-	this->radius = radius;
-	this->theta = theta;
-	this->phi = phi;
+	this->radius = inRadius;
+	this->theta = inTheta;
+	this->phi = inPhi;
 }
 	
-ID_INLINE void idPolar3::Set( const float radius, const float theta, const float phi ) {
+ID_INLINE void idPolar3::Set( const float inRadius, const float inTheta, const float inPhi ) {
 	assert( radius > 0 );
-	this->radius = radius;
-	this->theta = theta;
-	this->phi = phi;
+	this->radius = inRadius;
+	this->theta = inTheta;
+	this->phi = inPhi;
 }
 
 ID_INLINE float idPolar3::operator[]( const int index ) const {

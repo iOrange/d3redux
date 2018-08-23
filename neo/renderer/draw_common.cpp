@@ -101,25 +101,26 @@ void RB_PrepareStageTexturing( const shaderStage_t *pStage,  const drawSurf_t *s
 		qglEnable( GL_TEXTURE_GEN_T );
 		qglEnable( GL_TEXTURE_GEN_Q );
 
-		float	mat[16], plane[4];
-		myGlMultMatrix( surf->space->modelViewMatrix, backEnd.viewDef->projectionMatrix, mat );
+        idMat4 mat = surf->space->modelViewMatrix * backEnd.viewDef->projectionMatrix;
 
-		plane[0] = mat[0];
-		plane[1] = mat[4];
-		plane[2] = mat[8];
-		plane[3] = mat[12];
+		float plane[4];
+
+		plane[0] = mat.At(0);
+		plane[1] = mat.At(4);
+		plane[2] = mat.At(8);
+		plane[3] = mat.At(12);
 		qglTexGenfv( GL_S, GL_OBJECT_PLANE, plane );
 
-		plane[0] = mat[1];
-		plane[1] = mat[5];
-		plane[2] = mat[9];
-		plane[3] = mat[13];
+		plane[0] = mat.At(1);
+		plane[1] = mat.At(5);
+		plane[2] = mat.At(9);
+		plane[3] = mat.At(13);
 		qglTexGenfv( GL_T, GL_OBJECT_PLANE, plane );
 
-		plane[0] = mat[3];
-		plane[1] = mat[7];
-		plane[2] = mat[11];
-		plane[3] = mat[15];
+		plane[0] = mat.At(3);
+		plane[1] = mat.At(7);
+		plane[2] = mat.At(11);
+		plane[3] = mat.At(15);
 		qglTexGenfv( GL_Q, GL_OBJECT_PLANE, plane );
 	}
 
@@ -128,25 +129,25 @@ void RB_PrepareStageTexturing( const shaderStage_t *pStage,  const drawSurf_t *s
 		qglEnable( GL_TEXTURE_GEN_T );
 		qglEnable( GL_TEXTURE_GEN_Q );
 
-		float	mat[16], plane[4];
-		myGlMultMatrix( surf->space->modelViewMatrix, backEnd.viewDef->projectionMatrix, mat );
+        idMat4 mat = surf->space->modelViewMatrix * backEnd.viewDef->projectionMatrix;
 
-		plane[0] = mat[0];
-		plane[1] = mat[4];
-		plane[2] = mat[8];
-		plane[3] = mat[12];
+		float plane[4];
+		plane[0] = mat.At(0);
+		plane[1] = mat.At(4);
+		plane[2] = mat.At(8);
+		plane[3] = mat.At(12);
 		qglTexGenfv( GL_S, GL_OBJECT_PLANE, plane );
 
-		plane[0] = mat[1];
-		plane[1] = mat[5];
-		plane[2] = mat[9];
-		plane[3] = mat[13];
+		plane[0] = mat.At(1);
+		plane[1] = mat.At(5);
+		plane[2] = mat.At(9);
+		plane[3] = mat.At(13);
 		qglTexGenfv( GL_T, GL_OBJECT_PLANE, plane );
 
-		plane[0] = mat[3];
-		plane[1] = mat[7];
-		plane[2] = mat[11];
-		plane[3] = mat[15];
+		plane[0] = mat.At(3);
+		plane[1] = mat.At(7);
+		plane[2] = mat.At(11);
+		plane[3] = mat.At(15);
 		qglTexGenfv( GL_Q, GL_OBJECT_PLANE, plane );
 	}
 
@@ -165,25 +166,25 @@ void RB_PrepareStageTexturing( const shaderStage_t *pStage,  const drawSurf_t *s
 			qglEnable( GL_TEXTURE_GEN_T );
 			qglEnable( GL_TEXTURE_GEN_Q );
 
-			float	mat[16], plane[4];
-			myGlMultMatrix( surf->space->modelViewMatrix, backEnd.viewDef->projectionMatrix, mat );
+            idMat4 mat = surf->space->modelViewMatrix * backEnd.viewDef->projectionMatrix;
 
-			plane[0] = mat[0];
-			plane[1] = mat[4];
-			plane[2] = mat[8];
-			plane[3] = mat[12];
+			float plane[4];
+			plane[0] = mat.At(0);
+			plane[1] = mat.At(4);
+			plane[2] = mat.At(8);
+			plane[3] = mat.At(12);
 			qglTexGenfv( GL_S, GL_OBJECT_PLANE, plane );
 
-			plane[0] = mat[1];
-			plane[1] = mat[5];
-			plane[2] = mat[9];
-			plane[3] = mat[13];
+			plane[0] = mat.At(1);
+			plane[1] = mat.At(5);
+			plane[2] = mat.At(9);
+			plane[3] = mat.At(13);
 			qglTexGenfv( GL_T, GL_OBJECT_PLANE, plane );
 
-			plane[0] = mat[3];
-			plane[1] = mat[7];
-			plane[2] = mat[11];
-			plane[3] = mat[15];
+			plane[0] = mat.At(3);
+			plane[1] = mat.At(7);
+			plane[2] = mat.At(11);
+			plane[3] = mat.At(15);
 			qglTexGenfv( GL_Q, GL_OBJECT_PLANE, plane );
 
 			GL_SelectTexture( 0 );
@@ -235,11 +236,9 @@ void RB_PrepareStageTexturing( const shaderStage_t *pStage,  const drawSurf_t *s
 			qglNormalPointer( GL_FLOAT, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
 
 			qglMatrixMode( GL_TEXTURE );
-			float	mat[16];
 
-			R_TransposeGLMatrix( backEnd.viewDef->worldSpace.modelViewMatrix, mat );
-
-			qglLoadMatrixf( mat );
+            idMat4 mat = backEnd.viewDef->worldSpace.modelViewMatrix.Transpose();
+			qglLoadMatrixf( mat.ToFloatPtr() );
 			qglMatrixMode( GL_MODELVIEW );
 		}
 	}
@@ -364,7 +363,7 @@ void RB_T_FillDepthBuffer( const drawSurf_t *surf ) {
 		
 		idPlane	plane;
 
-		R_GlobalPlaneToLocal( surf->space->modelMatrix, backEnd.viewDef->clipPlanes[0], plane );
+		R_GlobalPlaneToLocal( surf->space->modelMatrix.ToFloatPtr(), backEnd.viewDef->clipPlanes[0], plane );
 		plane[3] += 0.5;	// the notch is in the middle
 		qglTexGenfv( GL_S, GL_OBJECT_PLANE, plane.ToFloatPtr() );
 		GL_SelectTexture( 0 );
@@ -550,7 +549,15 @@ void RB_STD_FillDepthBuffer( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 	qglEnable( GL_STENCIL_TEST );
 	qglStencilFunc( GL_ALWAYS, 1, 255 );
 
-	RB_RenderDrawSurfListWithFunction( drawSurfs, numDrawSurfs, RB_T_FillDepthBuffer );
+    switch (tr.backEndRenderer) {
+        case BE_ARB2:
+            RB_RenderDrawSurfListWithFunction(drawSurfs, numDrawSurfs, RB_T_FillDepthBuffer);
+        break;
+
+        case BE_GL33:
+            RB_RenderDrawSurfListWithFunction(drawSurfs, numDrawSurfs, RB_GL33_FillDepthBuffer);
+        break;
+    }
 
 	if ( backEnd.viewDef->numClipPlanes ) {
 		GL_SelectTexture( 1 );
@@ -659,26 +666,26 @@ void RB_SetProgramEnvironmentSpace( void ) {
 	float	parm[4];
 
 	// set eye position in local space
-	R_GlobalPointToLocal( space->modelMatrix, backEnd.viewDef->renderView.vieworg, *(idVec3 *)parm );
+	R_GlobalPointToLocal( space->modelMatrix.ToFloatPtr(), backEnd.viewDef->renderView.vieworg, *(idVec3 *)parm );
 	parm[3] = 1.0;
 	qglProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 5, parm );
 
 	// we need the model matrix without it being combined with the view matrix
 	// so we can transform local vectors to global coordinates
-	parm[0] = space->modelMatrix[0];
-	parm[1] = space->modelMatrix[4];
-	parm[2] = space->modelMatrix[8];
-	parm[3] = space->modelMatrix[12];
+	parm[0] = space->modelMatrix.At(0);
+	parm[1] = space->modelMatrix.At(4);
+	parm[2] = space->modelMatrix.At(8);
+	parm[3] = space->modelMatrix.At(12);
 	qglProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 6, parm );
-	parm[0] = space->modelMatrix[1];
-	parm[1] = space->modelMatrix[5];
-	parm[2] = space->modelMatrix[9];
-	parm[3] = space->modelMatrix[13];
+	parm[0] = space->modelMatrix.At(1);
+	parm[1] = space->modelMatrix.At(5);
+	parm[2] = space->modelMatrix.At(9);
+	parm[3] = space->modelMatrix.At(13);
 	qglProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 7, parm );
-	parm[0] = space->modelMatrix[2];
-	parm[1] = space->modelMatrix[6];
-	parm[2] = space->modelMatrix[10];
-	parm[3] = space->modelMatrix[14];
+	parm[0] = space->modelMatrix.At(2);
+	parm[1] = space->modelMatrix.At(6);
+	parm[2] = space->modelMatrix.At(10);
+	parm[3] = space->modelMatrix.At(14);
 	qglProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 8, parm );
 }
 
@@ -710,7 +717,7 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t *surf ) {
 
 	// change the matrix if needed
 	if ( surf->space != backEnd.currentSpace ) {
-		qglLoadMatrixf( surf->space->modelViewMatrix );
+		qglLoadMatrixf( surf->space->modelViewMatrix.ToFloatPtr() );
 		backEnd.currentSpace = surf->space;
 		RB_SetProgramEnvironmentSpace();
 	}
@@ -811,7 +818,7 @@ void RB_STD_T_RenderShaderPasses( const drawSurf_t *surf ) {
 			if ( newStage->megaTexture ) {
 				newStage->megaTexture->SetMappingForSurface( tri );
 				idVec3	localViewer;
-				R_GlobalPointToLocal( surf->space->modelMatrix, backEnd.viewDef->renderView.vieworg, localViewer );
+				R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), backEnd.viewDef->renderView.vieworg, localViewer );
 				newStage->megaTexture->BindForViewOrigin( localViewer );
 			}
 
@@ -1058,7 +1065,7 @@ static void RB_T_Shadow( const drawSurf_t *surf ) {
 		&& surf->space != backEnd.currentSpace ) {
 		idVec4 localLight;
 
-		R_GlobalPointToLocal( surf->space->modelMatrix, backEnd.vLight->globalLightOrigin, localLight.ToVec3() );
+		R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), backEnd.vLight->globalLightOrigin, localLight.ToVec3() );
 		localLight.w = 0.0f;
 		qglProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, PP_LIGHT_ORIGIN, localLight.ToFloatPtr() );
 	}
@@ -1256,7 +1263,7 @@ static void RB_T_BlendLight( const drawSurf_t *surf ) {
 		int		i;
 
 		for ( i = 0 ; i < 4 ; i++ ) {
-			R_GlobalPlaneToLocal( surf->space->modelMatrix, backEnd.vLight->lightProject[i], lightProject[i] );
+			R_GlobalPlaneToLocal( surf->space->modelMatrix.ToFloatPtr(), backEnd.vLight->lightProject[i], lightProject[i] );
 		}
 
 		GL_SelectTexture( 0 );
@@ -1381,7 +1388,7 @@ static void RB_T_BasicFog( const drawSurf_t *surf ) {
 
 		GL_SelectTexture( 0 );
 
-		R_GlobalPlaneToLocal( surf->space->modelMatrix, fogPlanes[0], local );
+		R_GlobalPlaneToLocal( surf->space->modelMatrix.ToFloatPtr(), fogPlanes[0], local );
 		local[3] += 0.5;
 		qglTexGenfv( GL_S, GL_OBJECT_PLANE, local.ToFloatPtr() );
 
@@ -1393,11 +1400,11 @@ local[0] = local[1] = local[2] = 0; local[3] = 0.5;
 		GL_SelectTexture( 1 );
 
 		// GL_S is constant per viewer
-		R_GlobalPlaneToLocal( surf->space->modelMatrix, fogPlanes[2], local );
+		R_GlobalPlaneToLocal( surf->space->modelMatrix.ToFloatPtr(), fogPlanes[2], local );
 		local[3] += FOG_ENTER;
 		qglTexGenfv( GL_T, GL_OBJECT_PLANE, local.ToFloatPtr() );
 
-		R_GlobalPlaneToLocal( surf->space->modelMatrix, fogPlanes[3], local );
+		R_GlobalPlaneToLocal( surf->space->modelMatrix.ToFloatPtr(), fogPlanes[3], local );
 		qglTexGenfv( GL_S, GL_OBJECT_PLANE, local.ToFloatPtr() );
 	}
 
@@ -1467,15 +1474,15 @@ static void RB_FogPass( const drawSurf_t *drawSurfs,  const drawSurf_t *drawSurf
 	qglEnable( GL_TEXTURE_GEN_T );
 	qglTexCoord2f( 0.5f, 0.5f );		// make sure Q is set
 
-	fogPlanes[0][0] = a * backEnd.viewDef->worldSpace.modelViewMatrix[2];
-	fogPlanes[0][1] = a * backEnd.viewDef->worldSpace.modelViewMatrix[6];
-	fogPlanes[0][2] = a * backEnd.viewDef->worldSpace.modelViewMatrix[10];
-	fogPlanes[0][3] = a * backEnd.viewDef->worldSpace.modelViewMatrix[14];
+	fogPlanes[0][0] = a * backEnd.viewDef->worldSpace.modelViewMatrix.At(2);
+	fogPlanes[0][1] = a * backEnd.viewDef->worldSpace.modelViewMatrix.At(6);
+	fogPlanes[0][2] = a * backEnd.viewDef->worldSpace.modelViewMatrix.At(10);
+	fogPlanes[0][3] = a * backEnd.viewDef->worldSpace.modelViewMatrix.At(14);
 
-	fogPlanes[1][0] = a * backEnd.viewDef->worldSpace.modelViewMatrix[0];
-	fogPlanes[1][1] = a * backEnd.viewDef->worldSpace.modelViewMatrix[4];
-	fogPlanes[1][2] = a * backEnd.viewDef->worldSpace.modelViewMatrix[8];
-	fogPlanes[1][3] = a * backEnd.viewDef->worldSpace.modelViewMatrix[12];
+	fogPlanes[1][0] = a * backEnd.viewDef->worldSpace.modelViewMatrix.At(0);
+	fogPlanes[1][1] = a * backEnd.viewDef->worldSpace.modelViewMatrix.At(4);
+	fogPlanes[1][2] = a * backEnd.viewDef->worldSpace.modelViewMatrix.At(8);
+	fogPlanes[1][3] = a * backEnd.viewDef->worldSpace.modelViewMatrix.At(12);
 
 
 	// texture 1 is the entering plane fade correction
@@ -1686,21 +1693,13 @@ void	RB_STD_DrawView( void ) {
 
 	// main light renderer
 	switch( tr.backEndRenderer ) {
-	case BE_ARB:
-		RB_ARB_DrawInteractions();
-		break;
 	case BE_ARB2:
 		RB_ARB2_DrawInteractions();
 		break;
-	case BE_NV20:
-		RB_NV20_DrawInteractions();
-		break;
-	case BE_NV10:
-		RB_NV10_DrawInteractions();
-		break;
-	case BE_R200:
-		RB_R200_DrawInteractions();
-		break;
+
+    case BE_GL33:
+        RB_GL33_DrawInteractions();
+        break;
 	}
 
 	// disable stencil shadow test

@@ -101,14 +101,14 @@ extern idComplex complex_origin;
 ID_INLINE idComplex::idComplex( void ) {
 }
 
-ID_INLINE idComplex::idComplex( const float r, const float i ) {
-	this->r = r;
-	this->i = i;
+ID_INLINE idComplex::idComplex( const float inR, const float inI ) {
+	this->r = inR;
+	this->i = inI;
 }
 
-ID_INLINE void idComplex::Set( const float r, const float i ) {
-	this->r = r;
-	this->i = i;
+ID_INLINE void idComplex::Set( const float inR, const float inI ) {
+	this->r = inR;
+	this->i = inI;
 }
 
 ID_INLINE void idComplex::Zero( void ) {

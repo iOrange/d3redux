@@ -96,8 +96,8 @@ ID_INLINE void idDrawVert::LerpAll( const idDrawVert &a, const idDrawVert &b, co
 	color[3] = (byte)( a.color[3] + f * ( b.color[3] - a.color[3] ) );
 }
 
-ID_INLINE void idDrawVert::SetColor( dword color ) {
-	*reinterpret_cast<dword *>(this->color) = color;
+ID_INLINE void idDrawVert::SetColor( dword inColor ) {
+	*reinterpret_cast<dword *>(this->color) = inColor;
 }
 
 ID_INLINE dword idDrawVert::GetColor( void ) const {

@@ -511,19 +511,19 @@ void world_to_hclip( const viewDef_t *viewDef, const idVec4 &global, idVec4 &cli
 
 	for ( i = 0 ; i < 4 ; i ++ ) {
 		view[i] = 
-			global[0] * viewDef->worldSpace.modelViewMatrix[ i + 0 * 4 ] +
-			global[1] * viewDef->worldSpace.modelViewMatrix[ i + 1 * 4 ] +
-			global[2] * viewDef->worldSpace.modelViewMatrix[ i + 2 * 4 ] +
-			global[3] *	viewDef->worldSpace.modelViewMatrix[ i + 3 * 4 ];
+			global[0] * viewDef->worldSpace.modelViewMatrix.At(i + 0 * 4) +
+			global[1] * viewDef->worldSpace.modelViewMatrix.At(i + 1 * 4) +
+			global[2] * viewDef->worldSpace.modelViewMatrix.At(i + 2 * 4) +
+			global[3] *	viewDef->worldSpace.modelViewMatrix.At(i + 3 * 4);
 	}
 
 
 	for ( i = 0 ; i < 4 ; i ++ ) {
 		clip[i] = 
-			view[0] * viewDef->projectionMatrix[ i + 0 * 4 ] +
-			view[1] * viewDef->projectionMatrix[ i + 1 * 4 ] +
-			view[2] * viewDef->projectionMatrix[ i + 2 * 4 ] +
-			view[3] * viewDef->projectionMatrix[ i + 3 * 4 ];
+			view[0] * viewDef->projectionMatrix.At(i + 0 * 4) +
+			view[1] * viewDef->projectionMatrix.At(i + 1 * 4) +
+			view[2] * viewDef->projectionMatrix.At(i + 2 * 4) +
+			view[3] * viewDef->projectionMatrix.At(i + 3 * 4);
 	}
 }
 

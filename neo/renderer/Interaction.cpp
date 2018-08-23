@@ -1081,8 +1081,8 @@ void idInteraction::AddActiveInteraction( void ) {
 		CreateInteraction( model );
 	}
 
-	R_GlobalPointToLocal( vEntity->modelMatrix, lightDef->globalLightOrigin, localLightOrigin );
-	R_GlobalPointToLocal( vEntity->modelMatrix, tr.viewDef->renderView.vieworg, localViewOrigin );
+	R_GlobalPointToLocal(vEntity->modelMatrix.ToFloatPtr(), lightDef->globalLightOrigin, localLightOrigin);
+	R_GlobalPointToLocal(vEntity->modelMatrix.ToFloatPtr(), tr.viewDef->renderView.vieworg, localViewOrigin);
 
 	// calculate the scissor as the intersection of the light and model rects
 	// this is used for light triangles, but not for shadow triangles
@@ -1112,7 +1112,7 @@ void idInteraction::AddActiveInteraction( void ) {
 				// try to cull before adding
 				// FIXME: this may not be worthwhile. We have already done culling on the ambient,
 				// but individual surfaces may still be cropped somewhat more
-				if ( !R_CullLocalBox( lightTris->bounds, vEntity->modelMatrix, 5, tr.viewDef->frustum ) ) {
+				if ( !R_CullLocalBox( lightTris->bounds, vEntity->modelMatrix.ToFloatPtr(), 5, tr.viewDef->frustum ) ) {
 
 					// make sure the original surface has its ambient cache created
 					srfTriangles_t *tri = sint->ambientTris;
@@ -1192,7 +1192,7 @@ void idInteraction::AddActiveInteraction( void ) {
 			// dynamic shadows that use the turboshadow code will not have valid
 			// bounds, because the perspective projection extends them to infinity
 			if ( r_useShadowCulling.GetBool() && !shadowTris->bounds.IsCleared() ) {
-				if ( R_CullLocalBox( shadowTris->bounds, vEntity->modelMatrix, 5, tr.viewDef->frustum ) ) {
+				if ( R_CullLocalBox( shadowTris->bounds, vEntity->modelMatrix.ToFloatPtr(), 5, tr.viewDef->frustum ) ) {
 					continue;
 				}
 			}

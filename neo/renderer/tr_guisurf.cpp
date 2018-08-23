@@ -143,31 +143,29 @@ void R_RenderGuiSurf( idUserInterface *gui, drawSurf_t *drawSurf ) {
 	// create the new matrix to draw on this surface
 	R_SurfaceToTextureAxis( drawSurf->geo, origin, axis );
 
-	float	guiModelMatrix[16];
-	float	modelMatrix[16];
+	idMat4 guiModelMatrix, modelMatrix;
 
-	guiModelMatrix[0] = axis[0][0] / 640.0;
-	guiModelMatrix[4] = axis[1][0] / 480.0;
-	guiModelMatrix[8] = axis[2][0];
-	guiModelMatrix[12] = origin[0];
+	guiModelMatrix.At(0) = axis[0][0] / 640.0;
+	guiModelMatrix.At(4) = axis[1][0] / 480.0;
+	guiModelMatrix.At(8) = axis[2][0];
+	guiModelMatrix.At(12) = origin[0];
 
-	guiModelMatrix[1] = axis[0][1] / 640.0;
-	guiModelMatrix[5] = axis[1][1] / 480.0;
-	guiModelMatrix[9] = axis[2][1];
-	guiModelMatrix[13] = origin[1];
+	guiModelMatrix.At(1) = axis[0][1] / 640.0;
+	guiModelMatrix.At(5) = axis[1][1] / 480.0;
+	guiModelMatrix.At(9) = axis[2][1];
+	guiModelMatrix.At(13) = origin[1];
 
-	guiModelMatrix[2] = axis[0][2] / 640.0;
-	guiModelMatrix[6] = axis[1][2] / 480.0;
-	guiModelMatrix[10] = axis[2][2];
-	guiModelMatrix[14] = origin[2];
+	guiModelMatrix.At(2) = axis[0][2] / 640.0;
+	guiModelMatrix.At(6) = axis[1][2] / 480.0;
+	guiModelMatrix.At(10) = axis[2][2];
+	guiModelMatrix.At(14) = origin[2];
 
-	guiModelMatrix[3] = 0;
-	guiModelMatrix[7] = 0;
-	guiModelMatrix[11] = 0;
-	guiModelMatrix[15] = 1;
+	guiModelMatrix.At(3) = 0;
+	guiModelMatrix.At(7) = 0;
+	guiModelMatrix.At(11) = 0;
+	guiModelMatrix.At(15) = 1;
 
-	myGlMultMatrix( guiModelMatrix, drawSurf->space->modelMatrix, 
-			modelMatrix );
+    modelMatrix = guiModelMatrix * drawSurf->space->modelMatrix;
 
 	tr.guiRecursionLevel++;
 

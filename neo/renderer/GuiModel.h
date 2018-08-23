@@ -45,7 +45,7 @@ public:
 	void	WriteToDemo( idDemoFile *demo );
 	void	ReadFromDemo( idDemoFile *demo );	
 	
-	void	EmitToCurrentView( float modelMatrix[16], bool depthHack );
+	void	EmitToCurrentView(const idMat4& modelMatrix, bool depthHack );
 	void	EmitFullScreen();
 
 	// these calls are forwarded from the renderer
@@ -59,7 +59,7 @@ public:
 	//---------------------------
 private:
 	void	AdvanceSurf();
-	void	EmitSurface( guiModelSurface_t *surf, float modelMatrix[16], float modelViewMatrix[16], bool depthHack );
+	void	EmitSurface(guiModelSurface_t* surf, const idMat4& modelMatrix, const idMat4& modelViewMatrix, bool depthHack);
 
 	guiModelSurface_t		*surf;
 

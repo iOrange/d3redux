@@ -207,6 +207,8 @@ int roq::SizeFile( idFile *ftosize )
 	return ftosize->Length();
 }
 
+#ifndef ROQ_NO_JPEG
+
 /* Expanded data destination object for stdio output */
 
 typedef struct {
@@ -393,7 +395,10 @@ void roq::JPEGDest (j_compress_ptr cinfo, byte* outfile, int size) {
   dest->size = size;
 }
 
+#endif // ROQ_NO_JPEG
+
 void roq::WriteLossless( void ) {
+#ifndef ROQ_NO_JPEG
 
 	word direct;
 	uint directdw;
@@ -515,6 +520,8 @@ void roq::WriteLossless( void ) {
 
 	/* And we're done! */
 	encoder->SetPreviousImage( "first frame", image );
+
+#endif // ROQ_NO_JPEG
 }
 
 void roq::InitRoQFile( const char *RoQFilename )

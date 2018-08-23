@@ -2260,20 +2260,20 @@ idCurve_NonUniformBSpline::Basis
 ====================
 */
 template< class type >
-ID_INLINE void idCurve_NonUniformBSpline<type>::Basis( const int index, const int order, const float t, float *bvals ) const {
+ID_INLINE void idCurve_NonUniformBSpline<type>::Basis( const int inIndex, const int inOrder, const float inT, float* inBvals ) const {
     int r, s, i;
     float omega;
 
-    bvals[order-1] = 1.0f;
-    for ( r = 2; r <= order; r++ ) {
-		i = index - r + 1;
-		bvals[order - r] = 0.0f;
-		for ( s = order - r + 1; s < order; s++ ) {
-			i++;
-			omega = (float) ( t - this->TimeForIndex( i ) ) / ( this->TimeForIndex( i + r - 1 ) - this->TimeForIndex( i ) );
-			bvals[s - 1] += ( 1.0f - omega ) * bvals[s];
-			bvals[s] *= omega;
-		}
+    inBvals[inOrder - 1] = 1.0f;
+    for ( r = 2; r <= inOrder; r++ ) {
+        i = inIndex - r + 1;
+        inBvals[inOrder - r] = 0.0f;
+        for ( s = inOrder - r + 1; s < inOrder; s++ ) {
+            i++;
+            omega = (float) ( inT - this->TimeForIndex( i ) ) / ( this->TimeForIndex( i + r - 1 ) - this->TimeForIndex( i ) );
+            inBvals[s - 1] += ( 1.0f - omega ) * inBvals[s];
+            inBvals[s] *= omega;
+        }
     }
 }
 
@@ -2285,16 +2285,16 @@ idCurve_NonUniformBSpline::BasisFirstDerivative
 ====================
 */
 template< class type >
-ID_INLINE void idCurve_NonUniformBSpline<type>::BasisFirstDerivative( const int index, const int order, const float t, float *bvals ) const {
+ID_INLINE void idCurve_NonUniformBSpline<type>::BasisFirstDerivative( const int inIndex, const int inOrder, const float t, float *bvals ) const {
 	int i;
 
-	Basis( index, order-1, t, bvals+1 );
+	Basis(inIndex, inOrder - 1, t, bvals+1 );
 	bvals[0] = 0.0f;
-	for ( i = 0; i < order-1; i++ ) {
+	for ( i = 0; i < inOrder - 1; i++ ) {
 		bvals[i] -= bvals[i+1];
-		bvals[i] *= (float) ( order - 1) / ( this->TimeForIndex( index + i + (order-1) - 2 ) - this->TimeForIndex( index + i - 2 ) );
+		bvals[i] *= (float) (inOrder - 1) / ( this->TimeForIndex(inIndex + i + (inOrder - 1) - 2 ) - this->TimeForIndex(inIndex + i - 2 ) );
 	}
-	bvals[i] *= (float) ( order - 1) / ( this->TimeForIndex( index + i + (order-1) - 2 ) - this->TimeForIndex( index + i - 2 ) );
+	bvals[i] *= (float) (inOrder - 1) / ( this->TimeForIndex(inIndex + i + (inOrder - 1) - 2 ) - this->TimeForIndex(inIndex + i - 2 ) );
 }
 
 /*
@@ -2305,16 +2305,16 @@ idCurve_NonUniformBSpline::BasisSecondDerivative
 ====================
 */
 template< class type >
-ID_INLINE void idCurve_NonUniformBSpline<type>::BasisSecondDerivative( const int index, const int order, const float t, float *bvals ) const {
+ID_INLINE void idCurve_NonUniformBSpline<type>::BasisSecondDerivative( const int index, const int inOrder, const float t, float *bvals ) const {
 	int i;
 
-	BasisFirstDerivative( index, order-1, t, bvals+1 );
+	BasisFirstDerivative( index, inOrder - 1, t, bvals+1 );
 	bvals[0] = 0.0f;
-	for ( i = 0; i < order-1; i++ ) {
+	for ( i = 0; i < inOrder - 1; i++ ) {
 		bvals[i] -= bvals[i+1];
-		bvals[i] *= (float) ( order - 1) / ( this->TimeForIndex( index + i + (order-1) - 2 ) - this->TimeForIndex( index + i - 2 ) );
+		bvals[i] *= (float) (inOrder - 1) / ( this->TimeForIndex( index + i + (inOrder - 1) - 2 ) - this->TimeForIndex( index + i - 2 ) );
 	}
-	bvals[i] *= (float) ( order - 1) / ( this->TimeForIndex( index + i + (order-1) - 2 ) - this->TimeForIndex( index + i - 2 ) );
+	bvals[i] *= (float) (inOrder - 1) / ( this->TimeForIndex( index + i + (inOrder - 1) - 2 ) - this->TimeForIndex( index + i - 2 ) );
 }
 
 

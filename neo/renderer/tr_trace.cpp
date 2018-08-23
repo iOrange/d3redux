@@ -389,15 +389,15 @@ void RB_ShowTrace( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 		}
 
 		// transform the points into local space
-		R_GlobalPointToLocal( surf->space->modelMatrix, start, localStart );
-		R_GlobalPointToLocal( surf->space->modelMatrix, end, localEnd );
+		R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), start, localStart );
+		R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), end, localEnd );
 
 		// check the bounding box
 		if ( !tri->bounds.Expand( radius ).LineIntersection( localStart, localEnd ) ) {
 			continue;
 		}
 
-		qglLoadMatrixf( surf->space->modelViewMatrix );
+		qglLoadMatrixf( surf->space->modelViewMatrix.ToFloatPtr() );
 
 		// highlight the surface
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );

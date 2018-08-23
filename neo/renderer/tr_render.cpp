@@ -176,14 +176,11 @@ RB_EnterWeaponDepthHack
 void RB_EnterWeaponDepthHack() {
 	qglDepthRange( 0, 0.5 );
 
-	float	matrix[16];
-
-	memcpy( matrix, backEnd.viewDef->projectionMatrix, sizeof( matrix ) );
-
-	matrix[14] *= 0.25;
+    idMat4 matrix = backEnd.viewDef->projectionMatrix;
+	matrix.At(14) *= 0.25;
 
 	qglMatrixMode(GL_PROJECTION);
-	qglLoadMatrixf( matrix );
+	qglLoadMatrixf( matrix.ToFloatPtr() );
 	qglMatrixMode(GL_MODELVIEW);
 }
 
@@ -195,14 +192,11 @@ RB_EnterModelDepthHack
 void RB_EnterModelDepthHack( float depth ) {
 	qglDepthRange( 0.0f, 1.0f );
 
-	float	matrix[16];
-
-	memcpy( matrix, backEnd.viewDef->projectionMatrix, sizeof( matrix ) );
-
-	matrix[14] -= depth;
+    idMat4 matrix = backEnd.viewDef->projectionMatrix;
+	matrix.At(14) -= depth;
 
 	qglMatrixMode(GL_PROJECTION);
-	qglLoadMatrixf( matrix );
+	qglLoadMatrixf( matrix.ToFloatPtr() );
 	qglMatrixMode(GL_MODELVIEW);
 }
 
@@ -215,7 +209,7 @@ void RB_LeaveDepthHack() {
 	qglDepthRange( 0, 1 );
 
 	qglMatrixMode(GL_PROJECTION);
-	qglLoadMatrixf( backEnd.viewDef->projectionMatrix );
+	qglLoadMatrixf( backEnd.viewDef->projectionMatrix.ToFloatPtr() );
 	qglMatrixMode(GL_MODELVIEW);
 }
 
@@ -241,7 +235,7 @@ void RB_RenderDrawSurfListWithFunction( drawSurf_t **drawSurfs, int numDrawSurfs
 
 		// change the matrix if needed
 		if ( drawSurf->space != backEnd.currentSpace ) {
-			qglLoadMatrixf( drawSurf->space->modelViewMatrix );
+			qglLoadMatrixf( drawSurf->space->modelViewMatrix.ToFloatPtr() );
 		}
 
 		if ( drawSurf->space->weaponDepthHack ) {
@@ -286,7 +280,7 @@ void RB_RenderDrawSurfChainWithFunction( const drawSurf_t *drawSurfs,
 	for ( drawSurf = drawSurfs ; drawSurf ; drawSurf = drawSurf->nextOnLight ) {
 		// change the matrix if needed
 		if ( drawSurf->space != backEnd.currentSpace ) {
-			qglLoadMatrixf( drawSurf->space->modelViewMatrix );
+			qglLoadMatrixf( drawSurf->space->modelViewMatrix.ToFloatPtr() );
 		}
 
 		if ( drawSurf->space->weaponDepthHack ) {
@@ -429,11 +423,10 @@ void RB_BindStageTexture( const float *shaderRegisters, const textureStage_t *te
 		qglNormalPointer( GL_FLOAT, sizeof( idDrawVert ), ((idDrawVert *)vertexCache.Position( surf->geo->ambientCache ))->normal.ToFloatPtr() );
 
 		qglMatrixMode( GL_TEXTURE );
-		float	mat[16];
 
-		R_TransposeGLMatrix( backEnd.viewDef->worldSpace.modelViewMatrix, mat );
+        idMat4 mat = backEnd.viewDef->worldSpace.modelViewMatrix.Transpose();
 
-		qglLoadMatrixf( mat );
+		qglLoadMatrixf( mat.ToFloatPtr() );
 		qglMatrixMode( GL_MODELVIEW );
 	}
 
@@ -555,7 +548,7 @@ to actually render the visible surfaces for this view
 void RB_BeginDrawingView (void) {
 	// set the modelview matrix for the viewer
 	qglMatrixMode(GL_PROJECTION);
-	qglLoadMatrixf( backEnd.viewDef->projectionMatrix );
+	qglLoadMatrixf( backEnd.viewDef->projectionMatrix.ToFloatPtr() );
 	qglMatrixMode(GL_MODELVIEW);
 
 	// set the window clipping
@@ -702,11 +695,16 @@ void RB_CreateSingleDrawInteractions( const drawSurf_t *surf, void (*DrawInterac
 		RB_LogComment( "---------- RB_CreateSingleDrawInteractions %s on %s ----------\n", lightShader->GetName(), surfaceShader->GetName() );
 	}
 
+    idMat4 projMat;
+    qglGetFloatv(GL_PROJECTION_MATRIX, projMat.ToFloatPtr());
+
 	// change the matrix and light projection vectors if needed
 	if ( surf->space != backEnd.currentSpace ) {
 		backEnd.currentSpace = surf->space;
-		qglLoadMatrixf( surf->space->modelViewMatrix );
+		qglLoadMatrixf( surf->space->modelViewMatrix.ToFloatPtr() );
 	}
+
+    inter.modelViewProj = surf->space->modelViewMatrix * backEnd.viewDef->projectionMatrix;
 
 	// change the scissor if needed
 	if ( r_useScissor.GetBool() && !backEnd.currentScissor.Equals( surf->scissorRect ) ) {
@@ -729,8 +727,8 @@ void RB_CreateSingleDrawInteractions( const drawSurf_t *surf, void (*DrawInterac
 	inter.surf = surf;
 	inter.lightFalloffImage = vLight->falloffImage;
 
-	R_GlobalPointToLocal( surf->space->modelMatrix, vLight->globalLightOrigin, inter.localLightOrigin.ToVec3() );
-	R_GlobalPointToLocal( surf->space->modelMatrix, backEnd.viewDef->renderView.vieworg, inter.localViewOrigin.ToVec3() );
+	R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), vLight->globalLightOrigin, inter.localLightOrigin.ToVec3() );
+	R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), backEnd.viewDef->renderView.vieworg, inter.localViewOrigin.ToVec3() );
 	inter.localLightOrigin[3] = 0;
 	inter.localViewOrigin[3] = 1;
 	inter.ambientLight = lightShader->IsAmbientLight();
@@ -738,7 +736,7 @@ void RB_CreateSingleDrawInteractions( const drawSurf_t *surf, void (*DrawInterac
 	// the base projections may be modified by texture matrix on light stages
 	idPlane lightProject[4];
 	for ( int i = 0 ; i < 4 ; i++ ) {
-		R_GlobalPlaneToLocal( surf->space->modelMatrix, backEnd.vLight->lightProject[i], lightProject[i] );
+		R_GlobalPlaneToLocal( surf->space->modelMatrix.ToFloatPtr(), backEnd.vLight->lightProject[i], lightProject[i] );
 	}
 
 	for ( int lightStageNum = 0 ; lightStageNum < lightShader->GetNumStages() ; lightStageNum++ ) {

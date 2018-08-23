@@ -238,7 +238,6 @@ idEnumTypeInfo *idTypeInfoGen::ParseEnumType( const char *scope, bool isTemplate
 	idToken token;
 	idEnumTypeInfo *typeInfo;
 	idEnumValueInfo enumValue;
-	idStr valueString;
 
 	typeInfo = new idEnumTypeInfo;
 	typeInfo->scope = scope;

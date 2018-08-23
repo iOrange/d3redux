@@ -772,6 +772,9 @@ public:
 					explicit idMat4( const idMat3 &rotation, const idVec3 &translation );
 					explicit idMat4( const float src[ 4 ][ 4 ] );
 
+    float           At(const int idx) const;
+    float&          At(const int idx);
+
 	const idVec4 &	operator[]( int index ) const;
 	idVec4 &		operator[]( int index );
 	idMat4			operator*( const float a ) const;
@@ -872,6 +875,14 @@ ID_INLINE idMat4::idMat4( const idMat3 &rotation, const idVec3 &translation ) {
 
 ID_INLINE idMat4::idMat4( const float src[ 4 ][ 4 ] ) {
 	memcpy( mat, src, 4 * 4 * sizeof( float ) );
+}
+
+ID_INLINE float idMat4::At(const int idx) const {
+    return this->ToFloatPtr()[idx];
+}
+
+ID_INLINE float& idMat4::At(const int idx) {
+    return this->ToFloatPtr()[idx];
 }
 
 ID_INLINE const idVec4 &idMat4::operator[]( int index ) const {
