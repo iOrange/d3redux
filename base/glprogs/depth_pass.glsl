@@ -9,7 +9,7 @@ out vec2 v2fUV;
 
 void main() {
     v2fUV = inUV;
-    gl_Position = gMVP * vec4(inPos, 1.0);
+    gl_Position = gMVP * vec4(inPos, 1.0f);
 }
 
 #endif // VERTEX_SHADER

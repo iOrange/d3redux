@@ -336,6 +336,13 @@ PFNGLGETACTIVEATTRIBARBPROC             qglGetActiveAttribARB = NULL;
 PFNGLGETATTRIBLOCATIONARBPROC           qglGetAttribLocationARB = NULL;
 PFNGLGETVERTEXATTRIBFVARBPROC           qglGetVertexAttribfvARB = NULL;
 
+// Debugging
+PFNGLDEBUGMESSAGECALLBACKPROC           qglDebugMessageCallback = NULL;
+
+void APIENTRY MyDebugOpenGLCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB* message, const void* userParam) {
+    common->Printf("OpenGL callback:\n%s\n", message);
+}
+
 /*
 =================
 R_CheckExtension
@@ -571,6 +578,13 @@ static void R_CheckPortableExtensions( void ) {
         qglGetActiveAttribARB = (PFNGLGETACTIVEATTRIBARBPROC)GLimp_ExtensionPointer("glGetActiveAttribARB");
         qglGetAttribLocationARB = (PFNGLGETATTRIBLOCATIONARBPROC)GLimp_ExtensionPointer("glGetAttribLocationARB");
         qglGetVertexAttribfvARB = (PFNGLGETVERTEXATTRIBFVARBPROC)GLimp_ExtensionPointer("glGetVertexAttribfvARB");
+    }
+
+    //#NOTE_SK: always trying to get this function
+    // Debugging
+    qglDebugMessageCallback = (PFNGLDEBUGMESSAGECALLBACKPROC)GLimp_ExtensionPointer("glDebugMessageCallback");
+    if (qglDebugMessageCallback) {
+        qglDebugMessageCallback((OPENGL_DEBUGPROC)&MyDebugOpenGLCallback, NULL);
     }
 
 	// check for minimum set

@@ -208,6 +208,11 @@ extern  PFNGLGETACTIVEATTRIBARBPROC         qglGetActiveAttribARB;
 extern  PFNGLGETATTRIBLOCATIONARBPROC       qglGetAttribLocationARB;
 extern  PFNGLGETVERTEXATTRIBFVARBPROC       qglGetVertexAttribfvARB;
 
+// Debugging
+typedef void (APIENTRY * OPENGL_DEBUGPROC)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB* message, void* userParam);
+typedef void (APIENTRY * PFNGLDEBUGMESSAGECALLBACKPROC)(OPENGL_DEBUGPROC callback, void* userParam);
+extern PFNGLDEBUGMESSAGECALLBACKPROC        qglDebugMessageCallback;
+
 //===========================================================================
 
 // non-windows systems will just redefine qgl* to gl*
@@ -558,11 +563,14 @@ extern  void ( APIENTRY * qglViewport )(GLint x, GLint y, GLsizei width, GLsizei
 
 #if defined( _WIN32 )
 
-extern  int   ( WINAPI * qwglChoosePixelFormat )(HDC, CONST PIXELFORMATDESCRIPTOR *);
-extern  int   ( WINAPI * qwglDescribePixelFormat) (HDC, int, UINT, LPPIXELFORMATDESCRIPTOR);
-extern  int   ( WINAPI * qwglGetPixelFormat)(HDC);
-extern  BOOL  ( WINAPI * qwglSetPixelFormat)(HDC, int, CONST PIXELFORMATDESCRIPTOR *);
-extern  BOOL  ( WINAPI * qwglSwapBuffers)(HDC);
+extern int   ( WINAPI * qwglChoosePixelFormat )(HDC, CONST PIXELFORMATDESCRIPTOR *);
+extern int   ( WINAPI * qwglDescribePixelFormat) (HDC, int, UINT, LPPIXELFORMATDESCRIPTOR);
+extern int   ( WINAPI * qwglGetPixelFormat)(HDC);
+extern BOOL  ( WINAPI * qwglSetPixelFormat)(HDC, int, CONST PIXELFORMATDESCRIPTOR *);
+extern BOOL  ( WINAPI * qwglSwapBuffers)(HDC);
+
+typedef HGLRC( WINAPI * PFNWGLCREATECONTEXTATTRIBSARBPROC) (HDC, HGLRC, const int *);
+extern PFNWGLCREATECONTEXTATTRIBSARBPROC qwglCreateContextAttribsARB;
 
 extern BOOL  ( WINAPI * qwglCopyContext)(HGLRC, HGLRC, UINT);
 extern HGLRC ( WINAPI * qwglCreateContext)(HDC);

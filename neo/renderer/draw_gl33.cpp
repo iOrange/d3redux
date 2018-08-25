@@ -3,6 +3,8 @@
 
 #include "tr_local.h"
 
+//#define GL33_DISABLE_DRAW
+
 enum E_VERTEX_UNIFORMS {
     EVU_MVP = 0,
     EVU_Model,
@@ -93,6 +95,7 @@ static glslProg_t glslProgs[MAX_GLPROGS] = {
     { VPROG_TEST,           0, {-1}, {-1}, "test.glsl" },
     { VPROG_INTERACTION,    0, {-1}, {-1}, "interaction.glsl" },
     { GLPROG_DEPTH_PASS,    0, {-1}, {-1}, "depth_pass.glsl" },
+    { GLPROG_UNLIT_PASS,    0, {-1}, {-1}, "unlit_pass.glsl" },
 
 // additional programs can be dynamically specified in materials
 };
@@ -311,6 +314,10 @@ RB_GL33_DrawInteraction
 ==================
 */
 void RB_GL33_DrawInteraction(const drawInteraction_t* din) {
+#ifdef GL33_DISABLE_DRAW
+    return;
+#endif
+
     glslProg_t& prog = glslProgs[gLastProgIdx];
 
     // load all the vertex program uniforms
@@ -387,6 +394,10 @@ RB_GL33_CreateDrawInteractions
 =============
 */
 void RB_GL33_CreateDrawInteractions(const drawSurf_t* surf) {
+#ifdef GL33_DISABLE_DRAW
+    return;
+#endif
+
     if (!surf) {
         return;
     }
@@ -488,6 +499,10 @@ RB_ARB2_DrawInteractions
 ==================
 */
 void RB_GL33_DrawInteractions() {
+#ifdef GL33_DISABLE_DRAW
+    return;
+#endif
+
     viewLight_t*        vLight;
     const idMaterial*   lightShader;
 
@@ -575,6 +590,10 @@ RB_GL33_FillDepthBuffer
 ==================
 */
 void RB_GL33_FillDepthBuffer(const drawSurf_t *surf) {
+#ifdef GL33_DISABLE_DRAW
+    return;
+#endif
+
     int			stage;
     const idMaterial	*shader;
     const shaderStage_t *pStage;
@@ -759,4 +778,341 @@ void RB_GL33_FillDepthBuffer(const drawSurf_t *surf) {
     if (shader->GetSort() == SS_SUBVIEW) {
         GL_State(GLS_DEPTHFUNC_LESS);
     }
+}
+
+/*
+==================
+RB_GL33_RenderShaderPasses
+
+This is also called for the generated 2D rendering
+==================
+*/
+void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
+    int                     stage;
+    const idMaterial*       material;
+    const shaderStage_t*    pStage;
+    const float*            regs;
+    const srfTriangles_t*   tri;
+
+    tri = surf->geo;
+    material = surf->material;
+
+    if (!material->HasAmbient()) {
+        return;
+    }
+
+    if (material->IsPortalSky()) {
+        return;
+    }
+
+    // change the matrix if needed
+    if (surf->space != backEnd.currentSpace) {
+        qglLoadMatrixf(surf->space->modelViewMatrix.ToFloatPtr());
+        backEnd.currentSpace = surf->space;
+        //RB_SetProgramEnvironmentSpace();
+    }
+
+    // change the scissor if needed
+    if (r_useScissor.GetBool() && !backEnd.currentScissor.Equals(surf->scissorRect)) {
+        backEnd.currentScissor = surf->scissorRect;
+        qglScissor(backEnd.viewDef->viewport.x1 + backEnd.currentScissor.x1,
+            backEnd.viewDef->viewport.y1 + backEnd.currentScissor.y1,
+            backEnd.currentScissor.x2 + 1 - backEnd.currentScissor.x1,
+            backEnd.currentScissor.y2 + 1 - backEnd.currentScissor.y1);
+    }
+
+    // some deforms may disable themselves by setting numIndexes = 0
+    if (!tri->numIndexes) {
+        return;
+    }
+
+    if (!tri->ambientCache) {
+        common->Printf("RB_T_RenderShaderPasses: !tri->ambientCache\n");
+        return;
+    }
+
+    // get the expressions for conditionals / color / texcoords
+    regs = surf->shaderRegisters;
+
+    // set face culling appropriately
+    GL_Cull(material->GetCullType());
+
+    // set polygon offset if necessary
+    if (material->TestMaterialFlag(MF_POLYGONOFFSET)) {
+        qglEnable(GL_POLYGON_OFFSET_FILL);
+        qglPolygonOffset(r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * material->GetPolygonOffset());
+    }
+
+    if (surf->space->weaponDepthHack) {
+        RB_EnterWeaponDepthHack();
+    }
+
+    if (surf->space->modelDepthHack != 0.0f) {
+        RB_EnterModelDepthHack(surf->space->modelDepthHack);
+    }
+
+    const int progIdx = R_GL33_UseProgram(GLPROG_UNLIT_PASS);
+    if (progIdx < 0) {
+        return;
+    }
+
+    qglEnableClientState(GL_VERTEX_ARRAY);
+    qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    qglEnableClientState(GL_COLOR_ARRAY);
+
+    qglEnableVertexAttribArrayARB(EVA_Pos);
+    qglEnableVertexAttribArrayARB(EVA_UV);
+    qglEnableVertexAttribArrayARB(EVA_Normal);
+    qglEnableVertexAttribArrayARB(EVA_Tangent);
+    qglEnableVertexAttribArrayARB(EVA_Binormal);
+    qglEnableVertexAttribArrayARB(EVA_Color);
+
+    idDrawVert *ac = (idDrawVert *)vertexCache.Position(tri->ambientCache);
+
+    ///////////
+    //#NOTE_SK: this bullshit fixes glDrawElements crash on Nvidia :(
+    qglVertexPointer(3, GL_FLOAT, sizeof(idDrawVert), ac->xyz.ToFloatPtr());
+    qglTexCoordPointer(2, GL_FLOAT, sizeof(idDrawVert), ac->st.ToFloatPtr());
+    qglColorPointer(4, GL_UNSIGNED_BYTE, sizeof(idDrawVert), ac->color);
+    ///////////
+
+    qglVertexAttribPointerARB(EVA_Pos,      3, GL_FLOAT,         GL_FALSE, sizeof(idDrawVert), ac->xyz.ToFloatPtr());
+    qglVertexAttribPointerARB(EVA_UV,       2, GL_FLOAT,         GL_FALSE, sizeof(idDrawVert), ac->st.ToFloatPtr());
+    qglVertexAttribPointerARB(EVA_Normal,   3, GL_FLOAT,         GL_FALSE, sizeof(idDrawVert), ac->normal.ToFloatPtr());
+    qglVertexAttribPointerARB(EVA_Tangent,  3, GL_FLOAT,         GL_FALSE, sizeof(idDrawVert), ac->tangents[0].ToFloatPtr());
+    qglVertexAttribPointerARB(EVA_Binormal, 3, GL_FLOAT,         GL_FALSE, sizeof(idDrawVert), ac->tangents[1].ToFloatPtr());
+    qglVertexAttribPointerARB(EVA_Color,    4, GL_UNSIGNED_BYTE, GL_TRUE,  sizeof(idDrawVert), ac->color);
+
+    const glslProg_t& prog = glslProgs[progIdx];
+
+    idMat4 mvp = surf->space->modelViewMatrix * backEnd.viewDef->projectionMatrix;
+
+    // load all the vertex program uniforms
+    SetUniformMat4(prog.vulocs[EVU_MVP], mvp.ToFloatPtr());
+
+    qglUniform1iARB(prog.fulocs[EFU_TexDiffuse], 0);
+
+    for (stage = 0; stage < material->GetNumStages(); stage++) {
+        pStage = material->GetStage(stage);
+
+        // check the enable condition
+        if (regs[pStage->conditionRegister] == 0) {
+            continue;
+        }
+
+        // skip the stages involved in lighting
+        if (pStage->lighting != SL_AMBIENT) {
+            continue;
+        }
+
+        // skip if the stage is ( GL_ZERO, GL_ONE ), which is used for some alpha masks
+        if ((pStage->drawStateBits & (GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS)) == (GLS_SRCBLEND_ZERO | GLS_DSTBLEND_ONE)) {
+            continue;
+        }
+
+        // see if we are a new-style stage
+        newShaderStage_t *newStage = pStage->newStage;
+        if (newStage) {
+#if 0
+            //--------------------------
+            //
+            // new style stages
+            //
+            //--------------------------
+
+            if (r_skipNewAmbient.GetBool()) {
+                continue;
+            }
+
+            qglColorPointer(4, GL_UNSIGNED_BYTE, sizeof(idDrawVert), (void *)&ac->color);
+            qglVertexAttribPointerARB(9, 3, GL_FLOAT, false, sizeof(idDrawVert), ac->tangents[0].ToFloatPtr());
+            qglVertexAttribPointerARB(10, 3, GL_FLOAT, false, sizeof(idDrawVert), ac->tangents[1].ToFloatPtr());
+            qglNormalPointer(GL_FLOAT, sizeof(idDrawVert), ac->normal.ToFloatPtr());
+
+            qglEnableClientState(GL_COLOR_ARRAY);
+            qglEnableVertexAttribArrayARB(9);
+            qglEnableVertexAttribArrayARB(10);
+            qglEnableClientState(GL_NORMAL_ARRAY);
+
+            GL_State(pStage->drawStateBits);
+
+            qglBindProgramARB(GL_VERTEX_PROGRAM_ARB, newStage->vertexProgram);
+            qglEnable(GL_VERTEX_PROGRAM_ARB);
+
+            // megaTextures bind a lot of images and set a lot of parameters
+            if (newStage->megaTexture) {
+                newStage->megaTexture->SetMappingForSurface(tri);
+                idVec3	localViewer;
+                R_GlobalPointToLocal(surf->space->modelMatrix.ToFloatPtr(), backEnd.viewDef->renderView.vieworg, localViewer);
+                newStage->megaTexture->BindForViewOrigin(localViewer);
+            }
+
+            for (int i = 0; i < newStage->numVertexParms; i++) {
+                float	parm[4];
+                parm[0] = regs[newStage->vertexParms[i][0]];
+                parm[1] = regs[newStage->vertexParms[i][1]];
+                parm[2] = regs[newStage->vertexParms[i][2]];
+                parm[3] = regs[newStage->vertexParms[i][3]];
+                qglProgramLocalParameter4fvARB(GL_VERTEX_PROGRAM_ARB, i, parm);
+            }
+
+            for (int i = 0; i < newStage->numFragmentProgramImages; i++) {
+                if (newStage->fragmentProgramImages[i]) {
+                    GL_SelectTexture(i);
+                    newStage->fragmentProgramImages[i]->Bind();
+                }
+            }
+            qglBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, newStage->fragmentProgram);
+            qglEnable(GL_FRAGMENT_PROGRAM_ARB);
+
+            // draw it
+            RB_DrawElementsWithCounters(tri);
+
+            for (int i = 1; i < newStage->numFragmentProgramImages; i++) {
+                if (newStage->fragmentProgramImages[i]) {
+                    GL_SelectTexture(i);
+                    globalImages->BindNull();
+                }
+            }
+            if (newStage->megaTexture) {
+                newStage->megaTexture->Unbind();
+            }
+
+            GL_SelectTexture(0);
+
+            qglDisable(GL_VERTEX_PROGRAM_ARB);
+            qglDisable(GL_FRAGMENT_PROGRAM_ARB);
+            // Fixme: Hack to get around an apparent bug in ATI drivers.  Should remove as soon as it gets fixed.
+            qglBindProgramARB(GL_VERTEX_PROGRAM_ARB, 0);
+
+            qglDisableClientState(GL_COLOR_ARRAY);
+            qglDisableVertexAttribArrayARB(9);
+            qglDisableVertexAttribArrayARB(10);
+            qglDisableClientState(GL_NORMAL_ARRAY);
+#endif
+            continue;
+        }
+
+        //--------------------------
+        //
+        // old style stages
+        //
+        //--------------------------
+
+        idVec4 colorMod, colorAdd;
+        colorMod.Zero();
+
+        // set the color
+        colorAdd.x = regs[pStage->color.registers[0]];
+        colorAdd.y = regs[pStage->color.registers[1]];
+        colorAdd.z = regs[pStage->color.registers[2]];
+        colorAdd.w = regs[pStage->color.registers[3]];
+
+        // skip the entire stage if an add would be black
+        if ((pStage->drawStateBits & (GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS)) == (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE)
+            && colorAdd.x <= 0 && colorAdd.y <= 0 && colorAdd.z <= 0) {
+            continue;
+        }
+
+        // skip the entire stage if a blend would be completely transparent
+        if ((pStage->drawStateBits & (GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS)) == (GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA)
+            && colorAdd.w <= 0) {
+            continue;
+        }
+
+        // select the vertex color source
+        if (pStage->vertexColor == SVC_IGNORE) {
+            //qglColor4fv(color);
+        } else {
+            //qglColorPointer(4, GL_UNSIGNED_BYTE, sizeof(idDrawVert), (void *)&ac->color);
+            //qglEnableClientState(GL_COLOR_ARRAY);
+
+            //#TODO_SK: TODO !!!
+#if 0
+            if (pStage->vertexColor == SVC_INVERSE_MODULATE) {
+                GL_TexEnv(GL_COMBINE_ARB);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_PRIMARY_COLOR_ARB);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_ARB, GL_SRC_COLOR);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_ARB, GL_ONE_MINUS_SRC_COLOR);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1);
+            }
+#endif
+
+            // for vertex color and modulated color, we need to enable a second
+            // texture stage
+#if 0
+            if (color[0] != 1 || color[1] != 1 || color[2] != 1 || color[3] != 1) {
+                GL_SelectTexture(1);
+
+                globalImages->whiteImage->Bind();
+                GL_TexEnv(GL_COMBINE_ARB);
+
+                qglTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
+
+                qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_PREVIOUS_ARB);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_CONSTANT_ARB);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_ARB, GL_SRC_COLOR);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_ARB, GL_SRC_COLOR);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1);
+
+                qglTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_ARB, GL_MODULATE);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_ARB, GL_PREVIOUS_ARB);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA_ARB, GL_CONSTANT_ARB);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA_ARB, GL_SRC_ALPHA);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_ALPHA_ARB, GL_SRC_ALPHA);
+                qglTexEnvi(GL_TEXTURE_ENV, GL_ALPHA_SCALE, 1);
+
+                GL_SelectTexture(0);
+            }
+#endif
+        }
+
+        SetUniformVec4(prog.vulocs[EVU_ColorMod], colorMod.ToFloatPtr());
+        SetUniformVec4(prog.vulocs[EVU_ColorAdd], colorAdd.ToFloatPtr());
+
+        // bind the texture
+        RB_BindVariableStageImage(&pStage->texture, regs);
+
+        // set the state
+        GL_State(pStage->drawStateBits);
+
+        //RB_PrepareStageTexturing(pStage, surf, ac);
+
+        // draw it
+        RB_DrawElementsWithCounters(tri);
+
+        //RB_FinishStageTexturing(pStage, surf, ac);
+
+#if 0
+        if (pStage->vertexColor != SVC_IGNORE) {
+            qglDisableClientState(GL_COLOR_ARRAY);
+
+            GL_SelectTexture(1);
+            GL_TexEnv(GL_MODULATE);
+            globalImages->BindNull();
+            GL_SelectTexture(0);
+            GL_TexEnv(GL_MODULATE);
+        }
+#endif
+    }
+
+    // reset polygon offset
+    if (material->TestMaterialFlag(MF_POLYGONOFFSET)) {
+        qglDisable(GL_POLYGON_OFFSET_FILL);
+    }
+    if (surf->space->weaponDepthHack || surf->space->modelDepthHack != 0.0f) {
+        RB_LeaveDepthHack();
+    }
+
+    qglUseProgramObjectARB(0);
+
+    qglDisableVertexAttribArrayARB(EVA_Pos);
+    qglDisableVertexAttribArrayARB(EVA_UV);
+    qglDisableVertexAttribArrayARB(EVA_Normal);
+    qglDisableVertexAttribArrayARB(EVA_Tangent);
+    qglDisableVertexAttribArrayARB(EVA_Binormal);
+    qglDisableVertexAttribArrayARB(EVA_Color);
 }

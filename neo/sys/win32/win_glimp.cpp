@@ -296,6 +296,9 @@ void GLW_CheckWGLExtensions( HDC hDC ) {
 	wglGetPixelFormatAttribfvARB = (PFNWGLGETPIXELFORMATATTRIBFVARBPROC)GLimp_ExtensionPointer("wglGetPixelFormatAttribfvARB");
 	wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)GLimp_ExtensionPointer("wglChoosePixelFormatARB");
 
+    // WGL_ARB_create_context
+    qwglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)GLimp_ExtensionPointer("wglCreateContextAttribsARB");
+
 	// WGL_ARB_pbuffer
 	wglCreatePbufferARB = (PFNWGLCREATEPBUFFERARBPROC)GLimp_ExtensionPointer("wglCreatePbufferARB");
 	wglGetPbufferDCARB = (PFNWGLGETPBUFFERDCARBPROC)GLimp_ExtensionPointer("wglGetPbufferDCARB");
@@ -474,7 +477,27 @@ static bool GLW_InitDriver( glimpParms_t parms ) {
 	// startup the OpenGL subsystem by creating a context and making it current
 	//
 	common->Printf( "...creating GL context: " );
-	if ( ( win32.hGLRC = qwglCreateContext( win32.hDC ) ) == 0 ) {
+
+    win32.hGLRC = 0;
+    if (qwglCreateContextAttribsARB) {
+        // Create OpenGL 3.3 compatible profile context
+//#define WGL_CONTEXT_MAJOR_VERSION_ARB     0x2091
+//#define WGL_CONTEXT_MINOR_VERSION_ARB     0x2092
+//#define WGL_CONTEXT_PROFILE_MASK_ARB      0x9126
+//#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB  0x00000001
+//#define WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB 0x00000002
+        const int ctxAttribs[] = {
+            0x2091, 3,
+            0x2092, 3,
+            0x9126, 0x00000002,
+            0, 0
+        };
+        win32.hGLRC = qwglCreateContextAttribsARB(win32.hDC, NULL, ctxAttribs);
+    } else {
+        win32.hGLRC = qwglCreateContext(win32.hDC);
+    }
+
+	if ( win32.hGLRC == 0 ) {
 		common->Printf( "^3failed^0\n" );
 		return false;
 	}

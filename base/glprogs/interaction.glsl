@@ -39,7 +39,7 @@ uniform vec4 gColorAdd;
 out Vertex2Fragment v2f;
 
 void main() {
-    vec4 vPos = vec4(inPos, 1.0);
+    vec4 vPos = vec4(inPos, 1.0f);
 
     vec3 toLight = normalize(gLightOrigin.xyz - inPos);
     vec3 toViewer = normalize(gViewOrigin.xyz - inPos);
@@ -48,13 +48,13 @@ void main() {
     mat3 TBN = mat3(inTangent, inBinormal, inNormal);
     v2f.ToLight = toLight * TBN;
 
-    vec4 tcV4 = vec4(inUV, 1.0, 1.0);
+    vec4 tcV4 = vec4(inUV, 0.0f, 1.0f);
 
     v2f.uvBumpmap.x = dot(tcV4, gBumpMatrix_S);
     v2f.uvBumpmap.y = dot(tcV4, gBumpMatrix_T);
 
     v2f.uvLightFalloff.x = dot(vPos, gLightFalloff_S);
-    v2f.uvLightFalloff.y = 0.5;
+    v2f.uvLightFalloff.y = 0.5f;
 
     v2f.uvLightCookie.x = dot(vPos, gLightProject_S);
     v2f.uvLightCookie.y = dot(vPos, gLightProject_T);
@@ -113,10 +113,10 @@ void main() {
 
     // load the filtered normal map, then normalize to full scale,
     vec3 localNormal = texture(gTexBumpMap, v2f.uvBumpmap).wyz;  // normalmal is RXGB compressed (R and A swapped)
-    localNormal = normalize(localNormal * 2.0 - 1.0);
+    localNormal = normalize(localNormal * 2.0f - 1.0f);
 
     // diffuse dot product
-    vec4 light = vec4(vec3(dot(toLight, localNormal)), 1.0);
+    vec4 light = vec4(vec3(dot(toLight, localNormal)), 1.0f);
 
     // modulate by the light projection
     light *= textureProj(gTexLight, v2f.uvLightCookie);
@@ -137,14 +137,14 @@ void main() {
     float lookupX = dot(halfVector, localNormal);
 
     // perform a dependent table read for the specular falloff
-    vec2 lookupUV = vec2(lookupX, 0.5);
+    vec2 lookupUV = vec2(lookupX, 0.5f);
     vec4 specular = texture(gTexSpecularLUT, lookupUV);
 
     // modulate by the constant specular factor
     specular *= gSpecularModifier;
 
     // modulate by the specular map * 2
-    specular *= texture(gTexSpecular, v2f.uvSpecular) * 2.0;
+    specular *= texture(gTexSpecular, v2f.uvSpecular) * 2.0f;
 
     color = (specular + color) * light;
 

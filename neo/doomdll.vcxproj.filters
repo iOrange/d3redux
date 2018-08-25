@@ -103,6 +103,9 @@
     <Filter Include="Ui">
       <UniqueIdentifier>{b3166d25-0562-49da-bc8d-961006fe1785}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\gl3">
+      <UniqueIdentifier>{85513c45-476c-41ad-a93c-1e36159da65d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cm\CollisionModel.h">

@@ -1298,21 +1298,18 @@ void	R_ReloadARBPrograms_f( const idCmdArgs &args );
 int		R_FindARBProgram( GLenum target, const char *program );
 
 void    R_GL33_Init();
-void    R_ReloadGLSLPrograms_f(const idCmdArgs &args);
+void    R_ReloadGLSLPrograms_f(const idCmdArgs& args);
 void    RB_GL33_DrawInteractions();
 void    RB_GL33_FillDepthBuffer(const drawSurf_t* surf);
+void    RB_GL33_RenderShaderPasses(const drawSurf_t* surf);
+
 
 typedef enum {
 	PROG_INVALID,
 	VPROG_INTERACTION,
 	VPROG_ENVIRONMENT,
 	VPROG_BUMPY_ENVIRONMENT,
-	VPROG_R200_INTERACTION,
 	VPROG_STENCIL_SHADOW,
-	VPROG_NV20_BUMP_AND_LIGHT,
-	VPROG_NV20_DIFFUSE_COLOR,
-	VPROG_NV20_SPECULAR_COLOR,
-	VPROG_NV20_DIFFUSE_AND_SPECULAR_COLOR,
 	VPROG_TEST,
 	FPROG_INTERACTION,
 	FPROG_ENVIRONMENT,
@@ -1324,6 +1321,7 @@ typedef enum {
 	FPROG_GLASSWARP,
 
     GLPROG_DEPTH_PASS,  // z-prepass shader
+    GLPROG_UNLIT_PASS,  //
 
 	PROG_USER
 } program_t;

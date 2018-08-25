@@ -49,6 +49,8 @@ int   ( WINAPI * qwglGetPixelFormat)(HDC);
 BOOL  ( WINAPI * qwglSetPixelFormat)(HDC, int, CONST PIXELFORMATDESCRIPTOR *);
 BOOL  ( WINAPI * qwglSwapBuffers)(HDC);
 
+HGLRC ( WINAPI * qwglCreateContextAttribsARB)(HDC, HGLRC, const int *);
+
 BOOL  ( WINAPI * qwglCopyContext)(HGLRC, HGLRC, UINT);
 HGLRC ( WINAPI * qwglCreateContext)(HDC);
 HGLRC ( WINAPI * qwglCreateLayerContext)(HDC, int);
@@ -1670,6 +1672,8 @@ void QGL_Shutdown( void )
 	qwglGetPixelFormat           = NULL;
 	qwglSetPixelFormat           = NULL;
 	qwglSwapBuffers              = NULL;
+
+    qwglCreateContextAttribsARB  = NULL;
 }
 
 #define GR_NUM_BOARDS 0x0f
