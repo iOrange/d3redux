@@ -234,8 +234,8 @@ void idMegaTexture::BindForViewOrigin( const idVec3 viewOrigin ) {
 		if ( i >= numLevels ) {
 			globalImages->whiteImage->Bind();
 
-			static float	parms[4] = { -2, -2, 0, 1 };	// no contribution
-			qglProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, i, parms );
+			//static float	parms[4] = { -2, -2, 0, 1 };	// no contribution
+			//qglProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, i, parms );
 		} else {
 			idTextureLevel	*level = &levels[ numLevels-1-i ];
 			
@@ -248,22 +248,22 @@ void idMegaTexture::BindForViewOrigin( const idVec3 viewOrigin ) {
 			} else {
 				level->image->Bind();
 			}
-			qglProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, i, level->parms );
+			//qglProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, i, level->parms );
 		}
 	}
 
-	float	parms[4];
-	parms[0] = 0;
-	parms[1] = 0;
-	parms[2] = 0;
-	parms[3] = 1;
-	qglProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 7, parms );
+	//float	parms[4];
+	//parms[0] = 0;
+	//parms[1] = 0;
+	//parms[2] = 0;
+	//parms[3] = 1;
+	//qglProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 7, parms );
 
-	parms[0] = 1;
-	parms[1] = 1;
-	parms[2] = r_terrainScale.GetFloat();
-	parms[3] = 1;
-	qglProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 8, parms );
+	//parms[0] = 1;
+	//parms[1] = 1;
+	//parms[2] = r_terrainScale.GetFloat();
+	//parms[3] = 1;
+	//qglProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 8, parms );
 }
 
 /*
@@ -373,7 +373,7 @@ void idTextureLevel::UpdateTile( int localX, int localY, int globalX, int global
 	int	level = 0;
 	int size = TILE_SIZE;
 	while ( 1 ) {
-		qglTexSubImage2D( GL_TEXTURE_2D, level, localX * size, localY * size, size, size, GL_RGBA, GL_UNSIGNED_BYTE, data );
+		glTexSubImage2D( GL_TEXTURE_2D, level, localX * size, localY * size, size, size, GL_RGBA, GL_UNSIGNED_BYTE, data );
 		size >>= 1;
 		level++;
 

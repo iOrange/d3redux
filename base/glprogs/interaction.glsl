@@ -112,7 +112,7 @@ void main() {
     //
 
     // load the filtered normal map, then normalize to full scale,
-    vec3 localNormal = texture(gTexBumpMap, v2f.uvBumpmap).wyz;  // normalmal is RXGB compressed (R and A swapped)
+    vec3 localNormal = texture(gTexBumpMap, v2f.uvBumpmap).wyz;  // normalmap is RXGB compressed (R and A swapped)
     localNormal = normalize(localNormal * 2.0f - 1.0f);
 
     // diffuse dot product

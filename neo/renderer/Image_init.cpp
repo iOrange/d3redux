@@ -31,6 +31,13 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "tr_local.h"
 
+#ifndef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
+#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT   0x83F0
+#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT  0x83F1
+#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT  0x83F2
+#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT  0x83F3
+#endif
+
 const char *imageFilter[] = {
 	"GL_LINEAR_MIPMAP_NEAREST",
 	"GL_LINEAR_MIPMAP_LINEAR",
@@ -366,7 +373,7 @@ static void R_BorderClampImage( idImage *image ) {
 	// explicit zero border
 	float	color[4];
 	color[0] = color[1] = color[2] = color[3] = 0;
-	qglTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color );
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color );
 }
 
 static void R_RGBA8Image( idImage *image ) {
@@ -982,7 +989,7 @@ static filterName_t textureFilters[] = {
 			texEnum = GL_TEXTURE_3D;
 			break;
 		case TT_CUBIC:
-			texEnum = GL_TEXTURE_CUBE_MAP_EXT;
+			texEnum = GL_TEXTURE_CUBE_MAP;
 			break;
 		}
 
@@ -992,14 +999,14 @@ static filterName_t textureFilters[] = {
 		}
 		glt->Bind();
 		if ( glt->filter == TF_DEFAULT ) {
-			qglTexParameterf(texEnum, GL_TEXTURE_MIN_FILTER, globalImages->textureMinFilter );
-			qglTexParameterf(texEnum, GL_TEXTURE_MAG_FILTER, globalImages->textureMaxFilter );
+			glTexParameterf(texEnum, GL_TEXTURE_MIN_FILTER, globalImages->textureMinFilter );
+			glTexParameterf(texEnum, GL_TEXTURE_MAG_FILTER, globalImages->textureMaxFilter );
 		}
 		if ( glConfig.anisotropicAvailable ) {
-			qglTexParameterf(texEnum, GL_TEXTURE_MAX_ANISOTROPY_EXT, globalImages->textureAnisotropy );
+			glTexParameterf(texEnum, GL_TEXTURE_MAX_ANISOTROPY, globalImages->textureAnisotropy );
 		}	
 		if ( glConfig.textureLODBiasAvailable ) {
-			qglTexParameterf(texEnum, GL_TEXTURE_LOD_BIAS_EXT, globalImages->textureLODBias );
+			glTexParameterf(texEnum, GL_TEXTURE_LOD_BIAS, globalImages->textureLODBias );
 		}
 	}
 }
@@ -1184,8 +1191,7 @@ void R_ListImages_f( const idCmdArgs &args ) {
 		image = globalImages->images[ i ];
 
 		if ( uncompressedOnly ) {
-			if ( ( image->internalFormat >= GL_COMPRESSED_RGB_S3TC_DXT1_EXT && image->internalFormat <= GL_COMPRESSED_RGBA_S3TC_DXT5_EXT )
-				|| image->internalFormat == GL_COLOR_INDEX8_EXT ) {
+			if (image->internalFormat >= GL_COMPRESSED_RGB_S3TC_DXT1_EXT && image->internalFormat <= GL_COMPRESSED_RGBA_S3TC_DXT5_EXT) {
 				continue;
 			}
 		}
@@ -1298,6 +1304,8 @@ Create a 256 color palette to be used by compressed normal maps
 ==================
 */
 void idImageManager::SetNormalPalette( void ) {
+    //#TODO_SK: check and remove if bullshit
+#if 0
 	int		i, j;
 	idVec3	v;
 	float	t;
@@ -1390,7 +1398,8 @@ void idImageManager::SetNormalPalette( void ) {
 					   GL_UNSIGNED_BYTE,
 					   temptable );
 
-	qglEnable( GL_SHARED_TEXTURE_PALETTE_EXT );
+	glEnable( GL_SHARED_TEXTURE_PALETTE_EXT );
+#endif
 }
 
 /*
@@ -1922,11 +1931,11 @@ void idImageManager::BindNull() {
 
 	RB_LogComment( "BindNull()\n" );
 	if ( tmu->textureType == TT_CUBIC ) {
-		qglDisable( GL_TEXTURE_CUBE_MAP_EXT );
+		glDisable( GL_TEXTURE_CUBE_MAP );
 	} else if ( tmu->textureType == TT_3D ) {
-		qglDisable( GL_TEXTURE_3D );
+		glDisable( GL_TEXTURE_3D );
 	} else if ( tmu->textureType == TT_2D ) {
-		qglDisable( GL_TEXTURE_2D );
+		glDisable( GL_TEXTURE_2D );
 	}
 	tmu->textureType = TT_DISABLED;
 }

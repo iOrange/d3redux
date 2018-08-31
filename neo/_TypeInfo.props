@@ -8,6 +8,7 @@
     <ClCompile>
       <PreprocessorDefinitions>ID_ENABLE_CURL=0;ID_TYPEINFO;__DOOM_DLL__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(SolutionDir)_libs\glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

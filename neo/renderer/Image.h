@@ -49,8 +49,8 @@ qglTexSubImage
 qglCopyTexImage
 qglCopyTexSubImage
 
-qglEnable( GL_TEXTURE_* )
-qglDisable( GL_TEXTURE_* )
+glEnable( GL_TEXTURE_* )
+glDisable( GL_TEXTURE_* )
 
 ====================================================================
 */
@@ -205,7 +205,6 @@ public:
 	void		ActuallyLoadImage( bool checkForPrecompressed, bool fromBackEnd );
 	void		StartBackgroundImageLoad();
 	int			BitsForInternalFormat( int internalFormat ) const;
-	void		UploadCompressedNormalMap( int width, int height, const byte *rgba, int mipLevel );
 	GLenum		SelectInternalFormat( const byte **dataPtrs, int numDataPtrs, int width, int height,
 									 textureDepth_t minimumDepth, bool *monochromeResult ) const;
 	void		ImageProgramStringToCompressedFileName( const char *imageProg, char *fileName ) const;

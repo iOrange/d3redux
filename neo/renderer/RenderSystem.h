@@ -77,9 +77,6 @@ typedef struct glconfig_s {
 	bool				textureNonPowerOfTwoAvailable;
 	bool				depthBoundsTestAvailable;
 
-	// ati r300
-	bool				atiTwoSidedStencilAvailable;
-
     // GL33
     bool                glslShadersAvailable;
 

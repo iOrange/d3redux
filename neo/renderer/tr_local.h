@@ -1051,7 +1051,6 @@ void R_DoneFreeType( void );
 void R_SetColorMappings( void );
 
 void R_ScreenShot_f( const idCmdArgs &args );
-void R_StencilShot( void );
 
 bool R_CheckExtension( char *name );
 
@@ -1299,6 +1298,7 @@ int		R_FindARBProgram( GLenum target, const char *program );
 
 void    R_GL33_Init();
 void    R_ReloadGLSLPrograms_f(const idCmdArgs& args);
+int     R_FindGLSLProgram(const char* program);
 void    RB_GL33_DrawInteractions();
 void    RB_GL33_FillDepthBuffer(const drawSurf_t* surf);
 void    RB_GL33_RenderShaderPasses(const drawSurf_t* surf);

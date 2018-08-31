@@ -106,6 +106,9 @@
     <Filter Include="Renderer\gl3">
       <UniqueIdentifier>{85513c45-476c-41ad-a93c-1e36159da65d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="glad">
+      <UniqueIdentifier>{12291ec7-e33c-4ed6-8c2f-44e6edff031f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cm\CollisionModel.h">
@@ -1648,6 +1651,9 @@
     </ClCompile>
     <ClCompile Include="renderer\draw_gl33.cpp">
       <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="_libs\glad\src\glad.c">
+      <Filter>glad</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

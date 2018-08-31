@@ -48,7 +48,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "rc/doom_resource.h"
 #include "../../renderer/tr_local.h"
 
-static void		GLW_InitExtensions( void );
+static void GLW_InitExtensions();
+void* GLimp_ExtensionPointer(const char* name);
 
 
 // WGL_ARB_extensions_string
@@ -61,6 +62,9 @@ PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
 PFNWGLGETPIXELFORMATATTRIBIVARBPROC wglGetPixelFormatAttribivARB;
 PFNWGLGETPIXELFORMATATTRIBFVARBPROC wglGetPixelFormatAttribfvARB;
 PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB;
+
+// WGL_ARB_create_context
+PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
 
 // WGL_ARB_pbuffer
 PFNWGLCREATEPBUFFERARBPROC	wglCreatePbufferARB;
@@ -261,8 +265,8 @@ LONG WINAPI FakeWndProc (
     // Set up OpenGL
     pixelFormat = ChoosePixelFormat(hDC, &pfd);
     SetPixelFormat(hDC, pixelFormat, &pfd);
-    hGLRC = qwglCreateContext(hDC);
-    qwglMakeCurrent(hDC, hGLRC);
+    hGLRC = wglCreateContext(hDC);
+    wglMakeCurrent(hDC, hGLRC);
 
 	// free things
     wglMakeCurrent(NULL, NULL);
@@ -297,7 +301,7 @@ void GLW_CheckWGLExtensions( HDC hDC ) {
 	wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)GLimp_ExtensionPointer("wglChoosePixelFormatARB");
 
     // WGL_ARB_create_context
-    qwglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)GLimp_ExtensionPointer("wglCreateContextAttribsARB");
+    wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)GLimp_ExtensionPointer("wglCreateContextAttribsARB");
 
 	// WGL_ARB_pbuffer
 	wglCreatePbufferARB = (PFNWGLCREATEPBUFFERARBPROC)GLimp_ExtensionPointer("wglCreatePbufferARB");
@@ -479,22 +483,17 @@ static bool GLW_InitDriver( glimpParms_t parms ) {
 	common->Printf( "...creating GL context: " );
 
     win32.hGLRC = 0;
-    if (qwglCreateContextAttribsARB) {
+    if (wglCreateContextAttribsARB) {
         // Create OpenGL 3.3 compatible profile context
-//#define WGL_CONTEXT_MAJOR_VERSION_ARB     0x2091
-//#define WGL_CONTEXT_MINOR_VERSION_ARB     0x2092
-//#define WGL_CONTEXT_PROFILE_MASK_ARB      0x9126
-//#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB  0x00000001
-//#define WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB 0x00000002
         const int ctxAttribs[] = {
-            0x2091, 3,
-            0x2092, 3,
-            0x9126, 0x00000002,
+            WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+            WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+            WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
             0, 0
         };
-        win32.hGLRC = qwglCreateContextAttribsARB(win32.hDC, NULL, ctxAttribs);
+        win32.hGLRC = wglCreateContextAttribsARB(win32.hDC, NULL, ctxAttribs);
     } else {
-        win32.hGLRC = qwglCreateContext(win32.hDC);
+        win32.hGLRC = wglCreateContext(win32.hDC);
     }
 
 	if ( win32.hGLRC == 0 ) {
@@ -504,13 +503,30 @@ static bool GLW_InitDriver( glimpParms_t parms ) {
 	common->Printf( "succeeded\n" );
 
 	common->Printf( "...making context current: " );
-	if ( !qwglMakeCurrent( win32.hDC, win32.hGLRC ) ) {
-		qwglDeleteContext( win32.hGLRC );
+	if ( !wglMakeCurrent( win32.hDC, win32.hGLRC ) ) {
+		wglDeleteContext( win32.hGLRC );
 		win32.hGLRC = NULL;
 		common->Printf( "^3failed^0\n" );
 		return false;
 	}
 	common->Printf( "succeeded\n" );
+
+
+    // initializing GLAD
+    common->Printf("...initializing GLAD: ");
+    // Lambda that will be our function loader
+    auto loader = [](const char* name)->void* {
+        void* ptr = ::wglGetProcAddress(name);
+        if (!ptr) {
+            ptr = ::GetProcAddress(win32.hinstOpenGL, name);
+        }
+        return ptr;
+    };
+    if (!gladLoadGLLoader(loader)) {
+        common->Printf("^3failed^0\n");
+        return false;
+    }
+    common->Printf("succeeded\n");
 
 	return true;
 }
@@ -626,6 +642,10 @@ static bool GLW_CreateWindow( glimpParms_t parms ) {
 		if ( y < 0 ) {
 			y = 0;
 		}
+
+        //#NOTE_SK: center on screen
+        //x = (win32.desktopWidth - w) >> 1;
+        //y = (win32.desktopHeight - h) >> 1;
 	}
 
 	win32.hWnd = CreateWindowEx (
@@ -972,14 +992,12 @@ void GLimp_Shutdown( void ) {
 	common->Printf( "Shutting down OpenGL subsystem\n" );
 
 	// set current context to NULL
-	if ( qwglMakeCurrent ) {
-		retVal = qwglMakeCurrent( NULL, NULL ) != 0;
-		common->Printf( "...wglMakeCurrent( NULL, NULL ): %s\n", success[retVal] );
-	}
+	retVal = wglMakeCurrent( NULL, NULL ) != 0;
+	common->Printf( "...wglMakeCurrent( NULL, NULL ): %s\n", success[retVal] );
 
 	// delete HGLRC
 	if ( win32.hGLRC ) {
-		retVal = qwglDeleteContext( win32.hGLRC ) != 0;
+		retVal = wglDeleteContext( win32.hGLRC ) != 0;
 		common->Printf( "...deleting GL context: %s\n", success[retVal] );
 		win32.hGLRC = NULL;
 	}
@@ -1039,7 +1057,7 @@ void GLimp_SwapBuffers( void ) {
 		}
 	}
 
-	qwglSwapBuffers( win32.hDC );
+    ::SwapBuffers(win32.hDC);
 
 //Sys_DebugPrintf( "*** SwapBuffers() ***\n" );
 }
@@ -1061,7 +1079,7 @@ GLimp_ActivateContext
 ===================
 */
 void GLimp_ActivateContext( void ) {
-	if ( !qwglMakeCurrent( win32.hDC, win32.hGLRC ) ) {
+	if ( !wglMakeCurrent( win32.hDC, win32.hGLRC ) ) {
 		win32.wglErrors++;
 	}
 }
@@ -1073,8 +1091,8 @@ GLimp_DeactivateContext
 ===================
 */
 void GLimp_DeactivateContext( void ) {
-	qglFinish();
-	if ( !qwglMakeCurrent( win32.hDC, NULL ) ) {
+	glFinish();
+	if ( !wglMakeCurrent( win32.hDC, NULL ) ) {
 		win32.wglErrors++;
 	}
 #ifdef REALLOC_DC
@@ -1096,7 +1114,7 @@ static void GLimp_RenderThreadWrapper( void ) {
 	win32.glimpRenderThread();
 
 	// unbind the context before we die
-	qwglMakeCurrent( win32.hDC, NULL );
+	wglMakeCurrent( win32.hDC, NULL );
 }
 
 /*
@@ -1250,10 +1268,8 @@ GLimp_ExtensionPointer
 Returns a function pointer for an OpenGL extension entry point
 ===================
 */
-GLExtension_t GLimp_ExtensionPointer( const char *name ) {
-	void	(*proc)(void);
-
-	proc = (GLExtension_t)qwglGetProcAddress( name );
+void* GLimp_ExtensionPointer( const char *name ) {
+	void* proc = wglGetProcAddress( name );
 
 	if ( !proc ) {
 		common->Printf( "Couldn't find proc address for: %s\n", name );
