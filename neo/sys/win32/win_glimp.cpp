@@ -330,8 +330,6 @@ static bool GLW_InitDriver( glimpParms_t parms ) {
 
         int     attrib = 0;
 
-        parms.multiSamples = 16;
-
         if (parms.multiSamples > 0) {
             iAttributes[attrib++] = WGL_SAMPLE_BUFFERS_ARB;     iAttributes[attrib++] = GL_TRUE;
             iAttributes[attrib++] = WGL_SAMPLES_ARB;            iAttributes[attrib++] = parms.multiSamples;
