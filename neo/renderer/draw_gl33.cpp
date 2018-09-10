@@ -116,6 +116,7 @@ static glslProg_t glslProgs[MAX_GLPROGS] = {
     { VPROG_INTERACTION,    0, {-1}, {-1}, "interaction.glsl" },
     { GLPROG_DEPTH_PASS,    0, {-1}, {-1}, "depth_pass.glsl" },
     { GLPROG_UNLIT_PASS,    0, {-1}, {-1}, "unlit_pass.glsl" },
+    { GLPROG_ENVIRONMENT,   0, {-1}, {-1}, "environment.glsl" },
 
 // additional programs can be dynamically specified in materials
 };
@@ -857,6 +858,8 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
     const shaderStage_t*    pStage;
     const float*            regs;
     const srfTriangles_t*   tri;
+    int                     progIdx;
+    const glslProg_t*       prog;
 
     tri = surf->geo;
     material = surf->material;
@@ -915,11 +918,6 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
         RB_EnterModelDepthHack(surf->space->modelDepthHack);
     }
 
-    int progIdx = R_GL33_UseProgram(GLPROG_UNLIT_PASS);
-    if (progIdx < 0) {
-        return;
-    }
-
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
@@ -947,16 +945,7 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
     glVertexAttribPointer(EVA_Binormal, 3, GL_FLOAT,         GL_FALSE, sizeof(idDrawVert), ac->tangents[1].ToFloatPtr());
     glVertexAttribPointer(EVA_Color,    4, GL_UNSIGNED_BYTE, GL_TRUE,  sizeof(idDrawVert), ac->color);
 
-    const glslProg_t* prog = &glslProgs[progIdx];
-
     idMat4 mvp = surf->space->modelViewMatrix * backEnd.viewDef->projectionMatrix;
-
-    // load all the vertex program uniforms
-    SetUniformMat4(prog->vulocs[EVU_MVP], mvp.ToFloatPtr());
-    SetUniformMat4(prog->vulocs[EVU_ModelView], surf->space->modelViewMatrix.ToFloatPtr());
-    SetUniformMat4(prog->vulocs[EVU_Projection], backEnd.viewDef->projectionMatrix.ToFloatPtr());
-
-    glUniform1i(prog->fulocs[EFU_TexDiffuse], 0);
 
     for (stage = 0; stage < material->GetNumStages(); stage++) {
         pStage = material->GetStage(stage);
@@ -989,7 +978,6 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
                 continue;
             }
 
-#if 1
             GL_State(pStage->drawStateBits);
 
             progIdx = R_GL33_UseProgram(newStage->vertexProgram);
@@ -1029,6 +1017,8 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
                     newStage->fragmentProgramImages[i]->Bind();
 
                     glUniform1i(prog->fulocs[EFU_Textures] + i, i);
+                } else {
+                    glUniform1i(prog->fulocs[EFU_Textures] + i, 0);
                 }
             }
 
@@ -1068,7 +1058,6 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
             GL_SelectTexture(0);
 
             glUseProgram(0);
-#endif
             continue;
         }
 
@@ -1078,34 +1067,62 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
         //
         //--------------------------
 
+        const bool isReflectionPass = (pStage->texture.texgen == TG_REFLECT_CUBE);
+
+        if (isReflectionPass) {
+            progIdx = R_GL33_UseProgram(GLPROG_ENVIRONMENT);
+        } else {
+            progIdx = R_GL33_UseProgram(GLPROG_UNLIT_PASS);
+        }
+
+        if (progIdx < 0) {
+            return;
+        }
+
+        prog = &glslProgs[progIdx];
+
+        SetUniformMat4(prog->vulocs[EVU_MVP], mvp.ToFloatPtr());
+        SetUniformMat4(prog->vulocs[EVU_ModelView], surf->space->modelViewMatrix.ToFloatPtr());
+        SetUniformMat4(prog->vulocs[EVU_Projection], backEnd.viewDef->projectionMatrix.ToFloatPtr());
+
+        // set eye position in local space
+        if (isReflectionPass) {
+            const struct viewEntity_s* space = backEnd.currentSpace;
+            idVec4 localEyePos;
+            R_GlobalPointToLocal(space->modelMatrix.ToFloatPtr(), backEnd.viewDef->renderView.vieworg, *reinterpret_cast<idVec3*>(&localEyePos));
+            SetUniformVec4(prog->vulocs[EVU_ViewOrigin], localEyePos.ToFloatPtr());
+        }
+
+        glUniform1i(prog->fulocs[EFU_TexDiffuse], 0);
+
         idVec4 colorMod, colorAdd;
-        colorMod.Zero();
+        colorMod.Set(1.0f, 1.0f, 1.0f, 1.0f);
+        colorAdd.Zero();
 
         // set the color
-        colorAdd.x = regs[pStage->color.registers[0]];
-        colorAdd.y = regs[pStage->color.registers[1]];
-        colorAdd.z = regs[pStage->color.registers[2]];
-        colorAdd.w = regs[pStage->color.registers[3]];
+        idVec4 color;
+        color.x = regs[pStage->color.registers[0]];
+        color.y = regs[pStage->color.registers[1]];
+        color.z = regs[pStage->color.registers[2]];
+        color.w = regs[pStage->color.registers[3]];
 
         // skip the entire stage if an add would be black
         if ((pStage->drawStateBits & (GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS)) == (GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE)
-            && colorAdd.x <= 0 && colorAdd.y <= 0 && colorAdd.z <= 0) {
+            && color.x <= 0 && color.y <= 0 && color.z <= 0) {
             continue;
         }
 
         // skip the entire stage if a blend would be completely transparent
         if ((pStage->drawStateBits & (GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS)) == (GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA)
-            && colorAdd.w <= 0) {
+            && color.w <= 0) {
             continue;
         }
 
         // select the vertex color source
         if (pStage->vertexColor == SVC_IGNORE) {
-            //glColor4fv(color);
+            colorMod.Zero();
+            colorAdd = color;
         } else {
-            //glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(idDrawVert), (void *)&ac->color);
-            //glEnableClientState(GL_COLOR_ARRAY);
-
             //#TODO_SK: TODO !!!
 #if 0
             if (pStage->vertexColor == SVC_INVERSE_MODULATE) {
@@ -1119,34 +1136,10 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
             }
 #endif
 
-            // for vertex color and modulated color, we need to enable a second
-            // texture stage
-#if 0
             if (color[0] != 1 || color[1] != 1 || color[2] != 1 || color[3] != 1) {
-                GL_SelectTexture(1);
-
-                globalImages->whiteImage->Bind();
-                GL_TexEnv(GL_COMBINE_ARB);
-
-                qglTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
-
-                glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE);
-                glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_PREVIOUS_ARB);
-                glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_CONSTANT_ARB);
-                glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_ARB, GL_SRC_COLOR);
-                glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_ARB, GL_SRC_COLOR);
-                glTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1);
-
-                glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_ARB, GL_MODULATE);
-                glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_ARB, GL_PREVIOUS_ARB);
-                glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_ALPHA_ARB, GL_CONSTANT_ARB);
-                glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA_ARB, GL_SRC_ALPHA);
-                glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_ALPHA_ARB, GL_SRC_ALPHA);
-                glTexEnvi(GL_TEXTURE_ENV, GL_ALPHA_SCALE, 1);
-
-                GL_SelectTexture(0);
+                colorMod.Zero();
+                colorAdd = color;
             }
-#endif
         }
 
         SetUniformVec4(prog->vulocs[EVU_ColorMod], colorMod.ToFloatPtr());

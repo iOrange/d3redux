@@ -59,82 +59,10 @@ PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB;
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
 
 // WGL_ARB_pixel_format
-PFNWGLGETPIXELFORMATATTRIBIVARBPROC wglGetPixelFormatAttribivARB;
-PFNWGLGETPIXELFORMATATTRIBFVARBPROC wglGetPixelFormatAttribfvARB;
 PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB;
 
 // WGL_ARB_create_context
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
-
-// WGL_ARB_pbuffer
-PFNWGLCREATEPBUFFERARBPROC	wglCreatePbufferARB;
-PFNWGLGETPBUFFERDCARBPROC	wglGetPbufferDCARB;
-PFNWGLRELEASEPBUFFERDCARBPROC	wglReleasePbufferDCARB;
-PFNWGLDESTROYPBUFFERARBPROC	wglDestroyPbufferARB;
-PFNWGLQUERYPBUFFERARBPROC	wglQueryPbufferARB;
-
-// WGL_ARB_render_texture 
-PFNWGLBINDTEXIMAGEARBPROC		wglBindTexImageARB;
-PFNWGLRELEASETEXIMAGEARBPROC	wglReleaseTexImageARB;
-PFNWGLSETPBUFFERATTRIBARBPROC	wglSetPbufferAttribARB;
-
-
-
-/* ARB_pixel_format */
-#define WGL_NUMBER_PIXEL_FORMATS_ARB       0x2000
-#define WGL_DRAW_TO_WINDOW_ARB             0x2001
-#define WGL_DRAW_TO_BITMAP_ARB             0x2002
-#define WGL_ACCELERATION_ARB               0x2003
-#define WGL_NEED_PALETTE_ARB               0x2004
-#define WGL_NEED_SYSTEM_PALETTE_ARB        0x2005
-#define WGL_SWAP_LAYER_BUFFERS_ARB         0x2006
-#define WGL_SWAP_METHOD_ARB                0x2007
-#define WGL_NUMBER_OVERLAYS_ARB            0x2008
-#define WGL_NUMBER_UNDERLAYS_ARB           0x2009
-#define WGL_TRANSPARENT_ARB                0x200A
-#define WGL_SHARE_DEPTH_ARB                0x200C
-#define WGL_SHARE_STENCIL_ARB              0x200D
-#define WGL_SHARE_ACCUM_ARB                0x200E
-#define WGL_SUPPORT_GDI_ARB                0x200F
-#define WGL_SUPPORT_OPENGL_ARB             0x2010
-#define WGL_DOUBLE_BUFFER_ARB              0x2011
-#define WGL_STEREO_ARB                     0x2012
-#define WGL_PIXEL_TYPE_ARB                 0x2013
-#define WGL_COLOR_BITS_ARB                 0x2014
-#define WGL_RED_BITS_ARB                   0x2015
-#define WGL_RED_SHIFT_ARB                  0x2016
-#define WGL_GREEN_BITS_ARB                 0x2017
-#define WGL_GREEN_SHIFT_ARB                0x2018
-#define WGL_BLUE_BITS_ARB                  0x2019
-#define WGL_BLUE_SHIFT_ARB                 0x201A
-#define WGL_ALPHA_BITS_ARB                 0x201B
-#define WGL_ALPHA_SHIFT_ARB                0x201C
-#define WGL_ACCUM_BITS_ARB                 0x201D
-#define WGL_ACCUM_RED_BITS_ARB             0x201E
-#define WGL_ACCUM_GREEN_BITS_ARB           0x201F
-#define WGL_ACCUM_BLUE_BITS_ARB            0x2020
-#define WGL_ACCUM_ALPHA_BITS_ARB           0x2021
-#define WGL_DEPTH_BITS_ARB                 0x2022
-#define WGL_STENCIL_BITS_ARB               0x2023
-#define WGL_AUX_BUFFERS_ARB                0x2024
-#define WGL_NO_ACCELERATION_ARB            0x2025
-#define WGL_GENERIC_ACCELERATION_ARB       0x2026
-#define WGL_FULL_ACCELERATION_ARB          0x2027
-#define WGL_SWAP_EXCHANGE_ARB              0x2028
-#define WGL_SWAP_COPY_ARB                  0x2029
-#define WGL_SWAP_UNDEFINED_ARB             0x202A
-#define WGL_TYPE_RGBA_ARB                  0x202B
-#define WGL_TYPE_COLORINDEX_ARB            0x202C
-#define WGL_TRANSPARENT_RED_VALUE_ARB      0x2037
-#define WGL_TRANSPARENT_GREEN_VALUE_ARB    0x2038
-#define WGL_TRANSPARENT_BLUE_VALUE_ARB     0x2039
-#define WGL_TRANSPARENT_ALPHA_VALUE_ARB    0x203A
-#define WGL_TRANSPARENT_INDEX_VALUE_ARB    0x203B
-
-/* ARB_multisample */
-#define WGL_SAMPLE_BUFFERS_ARB             0x2041
-#define WGL_SAMPLES_ARB                    0x2042
-
 
 
 //
@@ -291,29 +219,15 @@ void GLW_CheckWGLExtensions( HDC hDC ) {
 		glConfig.wgl_extensions_string = "";
 	}
 
-	// WGL_EXT_swap_control
-	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC) GLimp_ExtensionPointer( "wglSwapIntervalEXT" );
-	r_swapInterval.SetModified();	// force a set next frame
+    // WGL_EXT_swap_control
+    wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC) GLimp_ExtensionPointer( "wglSwapIntervalEXT" );
+    r_swapInterval.SetModified();	// force a set next frame
 
-	// WGL_ARB_pixel_format
-	wglGetPixelFormatAttribivARB = (PFNWGLGETPIXELFORMATATTRIBIVARBPROC)GLimp_ExtensionPointer("wglGetPixelFormatAttribivARB");
-	wglGetPixelFormatAttribfvARB = (PFNWGLGETPIXELFORMATATTRIBFVARBPROC)GLimp_ExtensionPointer("wglGetPixelFormatAttribfvARB");
-	wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)GLimp_ExtensionPointer("wglChoosePixelFormatARB");
+    // WGL_ARB_pixel_format
+    wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)GLimp_ExtensionPointer("wglChoosePixelFormatARB");
 
     // WGL_ARB_create_context
     wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)GLimp_ExtensionPointer("wglCreateContextAttribsARB");
-
-	// WGL_ARB_pbuffer
-	wglCreatePbufferARB = (PFNWGLCREATEPBUFFERARBPROC)GLimp_ExtensionPointer("wglCreatePbufferARB");
-	wglGetPbufferDCARB = (PFNWGLGETPBUFFERDCARBPROC)GLimp_ExtensionPointer("wglGetPbufferDCARB");
-	wglReleasePbufferDCARB = (PFNWGLRELEASEPBUFFERDCARBPROC)GLimp_ExtensionPointer("wglReleasePbufferDCARB");
-	wglDestroyPbufferARB = (PFNWGLDESTROYPBUFFERARBPROC)GLimp_ExtensionPointer("wglDestroyPbufferARB");
-	wglQueryPbufferARB = (PFNWGLQUERYPBUFFERARBPROC)GLimp_ExtensionPointer("wglQueryPbufferARB");
-
-	// WGL_ARB_render_texture 
-	wglBindTexImageARB = (PFNWGLBINDTEXIMAGEARBPROC)GLimp_ExtensionPointer("wglBindTexImageARB");
-	wglReleaseTexImageARB = (PFNWGLRELEASETEXIMAGEARBPROC)GLimp_ExtensionPointer("wglReleaseTexImageARB");
-	wglSetPbufferAttribARB = (PFNWGLSETPBUFFERATTRIBARBPROC)GLimp_ExtensionPointer("wglSetPbufferAttribARB");
 }
 
 /*
@@ -402,40 +316,40 @@ static bool GLW_InitDriver( glimpParms_t parms ) {
 	if ( win32.hDC == NULL ) {
 		common->Printf( "...getting DC: " );
 
-		if ( ( win32.hDC = GetDC( win32.hWnd ) ) == NULL ) {
+		if ( ( win32.hDC = ::GetDC( win32.hWnd ) ) == NULL ) {
 			common->Printf( "^3failed^0\n" );
 			return false;
 		}
 		common->Printf( "succeeded\n" );
 	}
 
-	// the multisample path uses the wgl 
-	if ( wglChoosePixelFormatARB && parms.multiSamples > 1 ) {
-		int		iAttributes[20];
-		FLOAT	fAttributes[] = {0, 0};
-		UINT	numFormats;
+	if (wglChoosePixelFormatARB) {
+		int     iAttributes[32];
+		FLOAT   fAttributes[] = {0, 0};
+		UINT    numFormats;
 
-		// FIXME: specify all the other stuff
-		iAttributes[0] = WGL_SAMPLE_BUFFERS_ARB;
-		iAttributes[1] = 1;
-		iAttributes[2] = WGL_SAMPLES_ARB;
-		iAttributes[3] = parms.multiSamples;
-		iAttributes[4] = WGL_DOUBLE_BUFFER_ARB;
-		iAttributes[5] = TRUE;
-		iAttributes[6] = WGL_STENCIL_BITS_ARB;
-		iAttributes[7] = 8;
-		iAttributes[8] = WGL_DEPTH_BITS_ARB;
-		iAttributes[9] = 24;
-		iAttributes[10] = WGL_RED_BITS_ARB;
-		iAttributes[11] = 8;
-		iAttributes[12] = WGL_BLUE_BITS_ARB;
-		iAttributes[13] = 8;
-		iAttributes[14] = WGL_GREEN_BITS_ARB;
-		iAttributes[15] = 8;
-		iAttributes[16] = WGL_ALPHA_BITS_ARB;
-		iAttributes[17] = 8;
-		iAttributes[18] = 0;
-		iAttributes[19] = 0;
+        int     attrib = 0;
+
+        parms.multiSamples = 16;
+
+        if (parms.multiSamples > 0) {
+            iAttributes[attrib++] = WGL_SAMPLE_BUFFERS_ARB;     iAttributes[attrib++] = GL_TRUE;
+            iAttributes[attrib++] = WGL_SAMPLES_ARB;            iAttributes[attrib++] = parms.multiSamples;
+        } else {
+            iAttributes[attrib++] = WGL_SAMPLE_BUFFERS_ARB;     iAttributes[attrib++] = GL_FALSE;
+        }
+
+        iAttributes[attrib++] = WGL_DRAW_TO_WINDOW_ARB;         iAttributes[attrib++] = GL_TRUE;
+        iAttributes[attrib++] = WGL_SUPPORT_OPENGL_ARB;         iAttributes[attrib++] = GL_TRUE;
+        iAttributes[attrib++] = WGL_DOUBLE_BUFFER_ARB;          iAttributes[attrib++] = TRUE;
+        iAttributes[attrib++] = WGL_ACCELERATION_ARB;           iAttributes[attrib++] = WGL_FULL_ACCELERATION_ARB;
+        iAttributes[attrib++] = WGL_DEPTH_BITS_ARB;             iAttributes[attrib++] = 24;
+        iAttributes[attrib++] = WGL_STENCIL_BITS_ARB;           iAttributes[attrib++] = 8;
+        iAttributes[attrib++] = WGL_COLOR_BITS_ARB;             iAttributes[attrib++] = 24;
+        iAttributes[attrib++] = WGL_ALPHA_BITS_ARB;             iAttributes[attrib++] = 8;
+
+        // finish attribs
+        iAttributes[attrib++] = 0;                              iAttributes[attrib++] = 0;
 
 		wglChoosePixelFormatARB( win32.hDC, iAttributes, fAttributes, 1, &win32.pixelformat, &numFormats );
 	} else {
@@ -453,7 +367,7 @@ static bool GLW_InitDriver( glimpParms_t parms ) {
 		// using a minidriver then we need to bypass the GDI functions,
 		// otherwise use the GDI functions.
 		//
-		if ( ( win32.pixelformat = ChoosePixelFormat( win32.hDC, &src ) ) == 0 ) {
+		if ( ( win32.pixelformat = ::ChoosePixelFormat( win32.hDC, &src ) ) == 0 ) {
 			common->Printf( "...^3GLW_ChoosePFD failed^0\n");
 			return false;
 		}
@@ -461,7 +375,7 @@ static bool GLW_InitDriver( glimpParms_t parms ) {
 	}
 
 	// get the full info
-	DescribePixelFormat( win32.hDC, win32.pixelformat, sizeof( win32.pfd ), &win32.pfd );
+	::DescribePixelFormat( win32.hDC, win32.pixelformat, sizeof( win32.pfd ), &win32.pfd );
 	glConfig.colorBits = win32.pfd.cColorBits;
 	glConfig.depthBits = win32.pfd.cDepthBits;
 	glConfig.stencilBits = win32.pfd.cStencilBits;
@@ -472,7 +386,7 @@ static bool GLW_InitDriver( glimpParms_t parms ) {
 	}
 
 	// the same SetPixelFormat is used either way
-	if ( SetPixelFormat( win32.hDC, win32.pixelformat, &win32.pfd ) == FALSE ) {
+	if ( ::SetPixelFormat( win32.hDC, win32.pixelformat, &win32.pfd ) == FALSE ) {
 		common->Printf( "...^3SetPixelFormat failed^0\n", win32.hDC );
 		return false;
 	}

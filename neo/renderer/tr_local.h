@@ -1320,8 +1320,10 @@ typedef enum {
 	VPROG_GLASSWARP,
 	FPROG_GLASSWARP,
 
-    GLPROG_DEPTH_PASS,  // z-prepass shader
-    GLPROG_UNLIT_PASS,  //
+    GLPROG_DEPTH_PASS,          // z-prepass shader
+    GLPROG_UNLIT_PASS,          //
+    GLPROG_ENVIRONMENT,         // cubemap reflection
+    GLPROG_BUMPY_ENVIRONMENT,   // cubemap reflection with normalmap
 
 	PROG_USER
 } program_t;
