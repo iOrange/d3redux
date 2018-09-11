@@ -1574,6 +1574,9 @@ RENDERER DEBUG TOOLS
 
 =============================================================
 */
+#define DISABLE_RENDER_DEBUG_TOOLS
+
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 
 float RB_DrawTextLength( const char *text, float scale, int len );
 void RB_AddDebugText( const char *text, const idVec3 &origin, float scale, const idVec4 &color, const idMat3 &viewAxis, const int align, const int lifetime, const bool depthTest );
@@ -1591,6 +1594,8 @@ void RB_ShowDestinationAlpha( void );
 void RB_ShowOverdraw( void );
 void RB_RenderDebugTools( drawSurf_t **drawSurfs, int numDrawSurfs );
 void RB_ShutdownDebugTools( void );
+
+#endif // DISABLE_RENDER_DEBUG_TOOLS
 
 /*
 =============================================================
@@ -1659,7 +1664,9 @@ typedef struct {
 } localTrace_t;
 
 localTrace_t R_LocalTrace( const idVec3 &start, const idVec3 &end, const float radius, const srfTriangles_t *tri );
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 void RB_ShowTrace( drawSurf_t **drawSurfs, int numDrawSurfs );
+#endif // DISABLE_RENDER_DEBUG_TOOLS
 
 /*
 =============================================================

@@ -278,6 +278,8 @@ localTrace_t R_LocalTrace( const idVec3 &start, const idVec3 &end, const float r
 	return hit;
 }
 
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
+
 /*
 =================
 RB_DrawExpandedTriangles
@@ -425,3 +427,5 @@ void RB_ShowTrace( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 		}
 	}
 }
+
+#endif // DISABLE_RENDER_DEBUG_TOOLS

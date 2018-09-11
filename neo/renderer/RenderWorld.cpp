@@ -153,10 +153,12 @@ idRenderWorldLocal::~idRenderWorldLocal() {
 	// free all the entityDefs, lightDefs, portals, etc
 	FreeWorld();
 
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 	// free up the debug lines, polys, and text
 	RB_ClearDebugPolygons( 0 );
 	RB_ClearDebugLines( 0 );
 	RB_ClearDebugText( 0 );
+#endif // DISABLE_RENDER_DEBUG_TOOLS
 }
 
 /*
@@ -1722,8 +1724,12 @@ idRenderWorldLocal::DebugClearLines
 ====================
 */
 void idRenderWorldLocal::DebugClearLines( int time ) {
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 	RB_ClearDebugLines( time );
 	RB_ClearDebugText( time );
+#else
+    (void)time;
+#endif // DISABLE_RENDER_DEBUG_TOOLS
 }
 
 /*
@@ -1732,7 +1738,15 @@ idRenderWorldLocal::DebugLine
 ====================
 */
 void idRenderWorldLocal::DebugLine( const idVec4 &color, const idVec3 &start, const idVec3 &end, const int lifetime, const bool depthTest ) {
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 	RB_AddDebugLine( color, start, end, lifetime, depthTest );
+#else
+    (void)color;
+    (void)start;
+    (void)end;
+    (void)lifetime;
+    (void)depthTest;
+#endif
 }
 
 /*
@@ -2006,7 +2020,11 @@ idRenderWorldLocal::DebugClearPolygons
 ====================
 */
 void idRenderWorldLocal::DebugClearPolygons( int time ) {
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 	RB_ClearDebugPolygons( time );
+#else
+    (void)time;
+#endif // DISABLE_RENDER_DEBUG_TOOLS
 }
 
 /*
@@ -2015,7 +2033,14 @@ idRenderWorldLocal::DebugPolygon
 ====================
 */
 void idRenderWorldLocal::DebugPolygon( const idVec4 &color, const idWinding &winding, const int lifeTime, const bool depthTest ) {
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 	RB_AddDebugPolygon( color, winding, lifeTime, depthTest );
+#else
+    (void)color;
+    (void)winding;
+    (void)lifeTime;
+    (void)depthTest;
+#endif
 }
 
 /*
@@ -2061,7 +2086,15 @@ idRenderWorldLocal::DrawTextLength
 ================
 */
 float idRenderWorldLocal::DrawTextLength( const char *text, float scale, int len ) {
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 	return RB_DrawTextLength( text, scale, len );
+#else
+    (void)text;
+    (void)scale;
+    (void)len;
+
+    return 0.0f;
+#endif // DISABLE_RENDER_DEBUG_TOOLS
 }
 
 /*
@@ -2073,7 +2106,18 @@ idRenderWorldLocal::DrawText
 ================
 */
 void idRenderWorldLocal::DrawText( const char *text, const idVec3 &origin, float scale, const idVec4 &color, const idMat3 &viewAxis, const int align, const int lifetime, const bool depthTest ) {
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 	RB_AddDebugText( text, origin, scale, color, viewAxis, align, lifetime, depthTest );
+#else
+    (void)text;
+    (void)origin;
+    (void)scale;
+    (void)color;
+    (void)viewAxis;
+    (void)align;
+    (void)lifetime;
+    (void)depthTest;
+#endif // DISABLE_RENDER_DEBUG_TOOLS
 }
 
 /*

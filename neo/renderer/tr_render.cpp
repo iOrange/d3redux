@@ -174,14 +174,11 @@ RB_EnterWeaponDepthHack
 ===============
 */
 void RB_EnterWeaponDepthHack() {
-	glDepthRange( 0, 0.5 );
+    glDepthRange( 0, 0.5 );
 
-    idMat4 matrix = backEnd.viewDef->projectionMatrix;
-	matrix.At(14) *= 0.25;
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf( matrix.ToFloatPtr() );
-	glMatrixMode(GL_MODELVIEW);
+    //#TODO_SK: set this matrix somewhere !!!
+    //idMat4 matrix = backEnd.viewDef->projectionMatrix;
+    //matrix.At(14) *= 0.25;
 }
 
 /*
@@ -190,14 +187,11 @@ RB_EnterModelDepthHack
 ===============
 */
 void RB_EnterModelDepthHack( float depth ) {
-	glDepthRange( 0.0f, 1.0f );
+    glDepthRange( 0.0f, 1.0f );
 
-    idMat4 matrix = backEnd.viewDef->projectionMatrix;
-	matrix.At(14) -= depth;
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf( matrix.ToFloatPtr() );
-	glMatrixMode(GL_MODELVIEW);
+    //#TODO_SK: set this matrix somewhere !!!
+    //idMat4 matrix = backEnd.viewDef->projectionMatrix;
+    //matrix.At(14) -= depth;
 }
 
 /*
@@ -206,11 +200,9 @@ RB_LeaveDepthHack
 ===============
 */
 void RB_LeaveDepthHack() {
-	glDepthRange( 0, 1 );
+    glDepthRange( 0, 1 );
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf( backEnd.viewDef->projectionMatrix.ToFloatPtr() );
-	glMatrixMode(GL_MODELVIEW);
+    //#TODO_SK: restore projection matrix !!!
 }
 
 /*
@@ -235,7 +227,7 @@ void RB_RenderDrawSurfListWithFunction( drawSurf_t **drawSurfs, int numDrawSurfs
 
 		// change the matrix if needed
 		if ( drawSurf->space != backEnd.currentSpace ) {
-			glLoadMatrixf( drawSurf->space->modelViewMatrix.ToFloatPtr() );
+            //#TODO_SK: setup drawSurf->space->modelViewMatrix !!!
 		}
 
 		if ( drawSurf->space->weaponDepthHack ) {
@@ -280,7 +272,7 @@ void RB_RenderDrawSurfChainWithFunction( const drawSurf_t *drawSurfs,
 	for ( drawSurf = drawSurfs ; drawSurf ; drawSurf = drawSurf->nextOnLight ) {
 		// change the matrix if needed
 		if ( drawSurf->space != backEnd.currentSpace ) {
-			glLoadMatrixf( drawSurf->space->modelViewMatrix.ToFloatPtr() );
+            //#TODO_SK: setup drawSurf->space->modelViewMatrix !!!
 		}
 
 		if ( drawSurf->space->weaponDepthHack ) {
@@ -357,9 +349,9 @@ void RB_LoadShaderTextureMatrix( const float *shaderRegisters, const textureStag
 	float	matrix[16];
 
 	RB_GetShaderTextureMatrix( shaderRegisters, texture, matrix );
-	glMatrixMode( GL_TEXTURE );
-	glLoadMatrixf( matrix );
-	glMatrixMode( GL_MODELVIEW );
+
+    //#TODO_SK: emulate texture matrix ???
+    assert(false);
 }
 
 /*
@@ -405,30 +397,16 @@ void RB_BindStageTexture( const float *shaderRegisters, const textureStage_t *te
 	// image
 	RB_BindVariableStageImage( texture, shaderRegisters );
 
-	// texgens
-	if ( texture->texgen == TG_DIFFUSE_CUBE ) {
-		glTexCoordPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ((idDrawVert *)vertexCache.Position( surf->geo->ambientCache ))->normal.ToFloatPtr() );
-	}
-	if ( texture->texgen == TG_SKYBOX_CUBE || texture->texgen == TG_WOBBLESKY_CUBE ) {
-		glTexCoordPointer( 3, GL_FLOAT, 0, vertexCache.Position( surf->dynamicTexCoords ) );
-	}
-	if ( texture->texgen == TG_REFLECT_CUBE ) {
-		glEnable( GL_TEXTURE_GEN_S );
-		glEnable( GL_TEXTURE_GEN_T );
-		glEnable( GL_TEXTURE_GEN_R );
-		glTexGenf( GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP );
-		glTexGenf( GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP );
-		glTexGenf( GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP );
-		glEnableClientState( GL_NORMAL_ARRAY );
-		glNormalPointer( GL_FLOAT, sizeof( idDrawVert ), ((idDrawVert *)vertexCache.Position( surf->geo->ambientCache ))->normal.ToFloatPtr() );
-
-		glMatrixMode( GL_TEXTURE );
-
-        idMat4 mat = backEnd.viewDef->worldSpace.modelViewMatrix.Transpose();
-
-		glLoadMatrixf( mat.ToFloatPtr() );
-		glMatrixMode( GL_MODELVIEW );
-	}
+    // texgens
+    if ( texture->texgen == TG_DIFFUSE_CUBE ) {
+        //glTexCoordPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ((idDrawVert *)vertexCache.Position( surf->geo->ambientCache ))->normal.ToFloatPtr() );
+        assert(false);
+    }
+    if ( texture->texgen == TG_SKYBOX_CUBE || texture->texgen == TG_WOBBLESKY_CUBE ) {
+        //#TODO_SK: emulate this !!!
+        //glTexCoordPointer( 3, GL_FLOAT, 0, vertexCache.Position( surf->dynamicTexCoords ) );
+        assert(false);
+    }
 
 	// matrix
 	if ( texture->hasMatrix ) {
@@ -442,31 +420,7 @@ RB_FinishStageTexture
 ======================
 */
 void RB_FinishStageTexture( const textureStage_t *texture, const drawSurf_t *surf ) {
-	if ( texture->texgen == TG_DIFFUSE_CUBE || texture->texgen == TG_SKYBOX_CUBE 
-		|| texture->texgen == TG_WOBBLESKY_CUBE ) {
-		glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), 
-			(void *)&(((idDrawVert *)vertexCache.Position( surf->geo->ambientCache ))->st) );
-	}
-
-	if ( texture->texgen == TG_REFLECT_CUBE ) {
-		glDisable( GL_TEXTURE_GEN_S );
-		glDisable( GL_TEXTURE_GEN_T );
-		glDisable( GL_TEXTURE_GEN_R );
-		glTexGenf( GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
-		glTexGenf( GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
-		glTexGenf( GL_R, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
-		glDisableClientState( GL_NORMAL_ARRAY );
-
-		glMatrixMode( GL_TEXTURE );
-		glLoadIdentity();
-		glMatrixMode( GL_MODELVIEW );
-	}
-
-	if ( texture->hasMatrix ) {
-		glMatrixMode( GL_TEXTURE );
-		glLoadIdentity();
-		glMatrixMode( GL_MODELVIEW );
-	}
+    //TODO_SK: remove this function ???
 }
 
 
@@ -546,10 +500,7 @@ to actually render the visible surfaces for this view
 =================
 */
 void RB_BeginDrawingView (void) {
-	// set the modelview matrix for the viewer
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf( backEnd.viewDef->projectionMatrix.ToFloatPtr() );
-	glMatrixMode(GL_MODELVIEW);
+	//#TODO_SK: set projection matrix !!!  backEnd.viewDef->projectionMatrix
 
 	// set the window clipping
 	glViewport( tr.viewportOffset[0] + backEnd.viewDef->viewport.x1, 
@@ -695,13 +646,10 @@ void RB_CreateSingleDrawInteractions( const drawSurf_t *surf, void (*DrawInterac
 		RB_LogComment( "---------- RB_CreateSingleDrawInteractions %s on %s ----------\n", lightShader->GetName(), surfaceShader->GetName() );
 	}
 
-    idMat4 projMat;
-    glGetFloatv(GL_PROJECTION_MATRIX, projMat.ToFloatPtr());
-
 	// change the matrix and light projection vectors if needed
 	if ( surf->space != backEnd.currentSpace ) {
 		backEnd.currentSpace = surf->space;
-		glLoadMatrixf( surf->space->modelViewMatrix.ToFloatPtr() );
+        //#TODO_SK: upload surf->space->modelViewMatrix ??? 
 	}
 
     inter.modelViewProj = surf->space->modelViewMatrix * backEnd.viewDef->projectionMatrix;
@@ -875,7 +823,9 @@ void RB_DrawView( const void *data ) {
 
 	backEnd.pc.c_surfaces += backEnd.viewDef->numDrawSurfs;
 
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 	RB_ShowOverdraw();
+#endif // DISABLE_RENDER_DEBUG_TOOLS
 
 	// render the scene, jumping to the hardware specific interaction renderers
 	RB_STD_DrawView();

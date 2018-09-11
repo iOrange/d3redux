@@ -421,6 +421,8 @@ This is not used by the normal game paths, just by some tools
 =============
 */
 void RB_SetGL2D( void ) {
+    //#TODO_SK: re-write for GL33 !
+#if 0
 	// set 2D virtual screen size
 	glViewport( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
 	if ( r_useScissor.GetBool() ) {
@@ -440,6 +442,7 @@ void RB_SetGL2D( void ) {
 
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_STENCIL_TEST );
+#endif
 }
 
 

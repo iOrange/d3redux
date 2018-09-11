@@ -1939,7 +1939,9 @@ void idRenderSystemLocal::Shutdown( void ) {
 
 	R_ShutdownTriSurfData();
 
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 	RB_ShutdownDebugTools();
+#endif // DISABLE_RENDER_DEBUG_TOOLS
 
 	delete guiModel;
 	delete demoGuiModel;

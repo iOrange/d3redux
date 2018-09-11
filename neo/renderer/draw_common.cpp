@@ -225,21 +225,6 @@ void RB_PrepareStageTexturing( const shaderStage_t *pStage,  const drawSurf_t *s
 				//qglBindProgramARB( GL_VERTEX_PROGRAM_ARB, VPROG_ENVIRONMENT );
 				//glEnable( GL_VERTEX_PROGRAM_ARB );
 			}
-		} else {
-			glEnable( GL_TEXTURE_GEN_S );
-			glEnable( GL_TEXTURE_GEN_T );
-			glEnable( GL_TEXTURE_GEN_R );
-			glTexGenf( GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP );
-			glTexGenf( GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP );
-			glTexGenf( GL_R, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP );
-			glEnableClientState( GL_NORMAL_ARRAY );
-			glNormalPointer( GL_FLOAT, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
-
-			glMatrixMode( GL_TEXTURE );
-
-            idMat4 mat = backEnd.viewDef->worldSpace.modelViewMatrix.Transpose();
-			glLoadMatrixf( mat.ToFloatPtr() );
-			glMatrixMode( GL_MODELVIEW );
 		}
 	}
 }
@@ -257,36 +242,29 @@ void RB_FinishStageTexturing( const shaderStage_t *pStage, const drawSurf_t *sur
 
 	if ( pStage->texture.texgen == TG_DIFFUSE_CUBE || pStage->texture.texgen == TG_SKYBOX_CUBE
 		|| pStage->texture.texgen == TG_WOBBLESKY_CUBE ) {
-		glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), (void *)&ac->st );
+        //#TODO_SK: something here ???
 	}
 
-	if ( pStage->texture.texgen == TG_SCREEN ) {
-		glDisable( GL_TEXTURE_GEN_S );
-		glDisable( GL_TEXTURE_GEN_T );
-		glDisable( GL_TEXTURE_GEN_Q );
-	}
-	if ( pStage->texture.texgen == TG_SCREEN2 ) {
-		glDisable( GL_TEXTURE_GEN_S );
-		glDisable( GL_TEXTURE_GEN_T );
-		glDisable( GL_TEXTURE_GEN_Q );
+	if (pStage->texture.texgen == TG_SCREEN || pStage->texture.texgen == TG_SCREEN2) {
+        assert(false);
 	}
 
 	if ( pStage->texture.texgen == TG_GLASSWARP ) {
-		if ( tr.backEndRenderer == BE_ARB2 ) {
-			GL_SelectTexture( 2 );
-			globalImages->BindNull();
+		//if ( tr.backEndRenderer == BE_ARB2 ) {
+		//	GL_SelectTexture( 2 );
+		//	globalImages->BindNull();
 
-			GL_SelectTexture( 1 );
-			if ( pStage->texture.hasMatrix ) {
-				RB_LoadShaderTextureMatrix( surf->shaderRegisters, &pStage->texture );
-			}
-			glDisable( GL_TEXTURE_GEN_S );
-			glDisable( GL_TEXTURE_GEN_T );
-			glDisable( GL_TEXTURE_GEN_Q );
-			//glDisable( GL_FRAGMENT_PROGRAM_ARB );
-			globalImages->BindNull();
-			GL_SelectTexture( 0 );
-		}
+		//	GL_SelectTexture( 1 );
+		//	if ( pStage->texture.hasMatrix ) {
+		//		RB_LoadShaderTextureMatrix( surf->shaderRegisters, &pStage->texture );
+		//	}
+		//	glDisable( GL_TEXTURE_GEN_S );
+		//	glDisable( GL_TEXTURE_GEN_T );
+		//	glDisable( GL_TEXTURE_GEN_Q );
+		//	//glDisable( GL_FRAGMENT_PROGRAM_ARB );
+		//	globalImages->BindNull();
+		//	GL_SelectTexture( 0 );
+		//}
 	}
 
 	if ( pStage->texture.texgen == TG_REFLECT_CUBE ) {
@@ -310,25 +288,7 @@ void RB_FinishStageTexturing( const shaderStage_t *pStage, const drawSurf_t *sur
 			//glDisable( GL_VERTEX_PROGRAM_ARB );
 			// Fixme: Hack to get around an apparent bug in ATI drivers.  Should remove as soon as it gets fixed.
 			//qglBindProgramARB( GL_VERTEX_PROGRAM_ARB, 0 );
-		} else {
-			glDisable( GL_TEXTURE_GEN_S );
-			glDisable( GL_TEXTURE_GEN_T );
-			glDisable( GL_TEXTURE_GEN_R );
-			glTexGenf( GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
-			glTexGenf( GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
-			glTexGenf( GL_R, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR );
-			glDisableClientState( GL_NORMAL_ARRAY );
-
-			glMatrixMode( GL_TEXTURE );
-			glLoadIdentity();
-			glMatrixMode( GL_MODELVIEW );
 		}
-	}
-
-	if ( pStage->texture.hasMatrix ) {
-		glMatrixMode( GL_TEXTURE );
-		glLoadIdentity();
-		glMatrixMode( GL_MODELVIEW );
 	}
 }
 
@@ -689,285 +649,6 @@ void RB_SetProgramEnvironmentSpace( void ) {
 	//qglProgramEnvParameter4fvARB( GL_VERTEX_PROGRAM_ARB, 8, parm );
 }
 
-/*
-==================
-RB_STD_T_RenderShaderPasses
-
-This is also called for the generated 2D rendering
-==================
-*/
-void RB_STD_T_RenderShaderPasses( const drawSurf_t *surf ) {
-	int			stage;
-	const idMaterial	*shader;
-	const shaderStage_t *pStage;
-	const float	*regs;
-	float		color[4];
-	const srfTriangles_t	*tri;
-
-	tri = surf->geo;
-	shader = surf->material;
-
-	if ( !shader->HasAmbient() ) {
-		return;
-	}
-
-	if ( shader->IsPortalSky() ) {
-		return;
-	}
-
-	// change the matrix if needed
-	if ( surf->space != backEnd.currentSpace ) {
-		glLoadMatrixf( surf->space->modelViewMatrix.ToFloatPtr() );
-		backEnd.currentSpace = surf->space;
-		RB_SetProgramEnvironmentSpace();
-	}
-
-	// change the scissor if needed
-	if ( r_useScissor.GetBool() && !backEnd.currentScissor.Equals( surf->scissorRect ) ) {
-		backEnd.currentScissor = surf->scissorRect;
-		glScissor( backEnd.viewDef->viewport.x1 + backEnd.currentScissor.x1, 
-			backEnd.viewDef->viewport.y1 + backEnd.currentScissor.y1,
-			backEnd.currentScissor.x2 + 1 - backEnd.currentScissor.x1,
-			backEnd.currentScissor.y2 + 1 - backEnd.currentScissor.y1 );
-	}
-
-	// some deforms may disable themselves by setting numIndexes = 0
-	if ( !tri->numIndexes ) {
-		return;
-	}
-
-	if ( !tri->ambientCache ) {
-		common->Printf( "RB_T_RenderShaderPasses: !tri->ambientCache\n" );
-		return;
-	}
-
-	// get the expressions for conditionals / color / texcoords
-	regs = surf->shaderRegisters;
-
-	// set face culling appropriately
-	GL_Cull( shader->GetCullType() );
-
-	// set polygon offset if necessary
-	if ( shader->TestMaterialFlag(MF_POLYGONOFFSET) ) {
-		glEnable( GL_POLYGON_OFFSET_FILL );
-		glPolygonOffset( r_offsetFactor.GetFloat(), r_offsetUnits.GetFloat() * shader->GetPolygonOffset() );
-	}
-	
-	if ( surf->space->weaponDepthHack ) {
-		RB_EnterWeaponDepthHack();
-	}
-
-	if ( surf->space->modelDepthHack != 0.0f ) {
-		RB_EnterModelDepthHack( surf->space->modelDepthHack );
-	}
-
-	idDrawVert *ac = (idDrawVert *)vertexCache.Position( tri->ambientCache );
-	glVertexPointer( 3, GL_FLOAT, sizeof( idDrawVert ), ac->xyz.ToFloatPtr() );
-	glTexCoordPointer( 2, GL_FLOAT, sizeof( idDrawVert ), reinterpret_cast<void *>(&ac->st) );
-
-	for ( stage = 0; stage < shader->GetNumStages() ; stage++ ) {		
-		pStage = shader->GetStage(stage);
-
-		// check the enable condition
-		if ( regs[ pStage->conditionRegister ] == 0 ) {
-			continue;
-		}
-
-		// skip the stages involved in lighting
-		if ( pStage->lighting != SL_AMBIENT ) {
-			continue;
-		}
-
-		// skip if the stage is ( GL_ZERO, GL_ONE ), which is used for some alpha masks
-		if ( ( pStage->drawStateBits & (GLS_SRCBLEND_BITS|GLS_DSTBLEND_BITS) ) == ( GLS_SRCBLEND_ZERO | GLS_DSTBLEND_ONE ) ) {
-			continue;
-		}
-
-		// see if we are a new-style stage
-		newShaderStage_t *newStage = pStage->newStage;
-		if ( newStage ) {
-			//--------------------------
-			//
-			// new style stages
-			//
-			//--------------------------
-
-			// completely skip the stage if we don't have the capability
-			if ( tr.backEndRenderer != BE_ARB2 ) {
-				continue;
-			}
-			if ( r_skipNewAmbient.GetBool() ) {
-				continue;
-			}
-			glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), (void *)&ac->color );
-			glVertexAttribPointer( 9, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[0].ToFloatPtr() );
-			glVertexAttribPointer( 10, 3, GL_FLOAT, false, sizeof( idDrawVert ), ac->tangents[1].ToFloatPtr() );
-			glNormalPointer( GL_FLOAT, sizeof( idDrawVert ), ac->normal.ToFloatPtr() );
-
-			glEnableClientState( GL_COLOR_ARRAY );
-			glEnableVertexAttribArray( 9 );
-			glEnableVertexAttribArray( 10 );
-			glEnableClientState( GL_NORMAL_ARRAY );
-
-			GL_State( pStage->drawStateBits );
-			
-			//qglBindProgramARB( GL_VERTEX_PROGRAM_ARB, newStage->vertexProgram );
-			//glEnable( GL_VERTEX_PROGRAM_ARB );
-
-			// megaTextures bind a lot of images and set a lot of parameters
-			if ( newStage->megaTexture ) {
-				newStage->megaTexture->SetMappingForSurface( tri );
-				idVec3	localViewer;
-				R_GlobalPointToLocal( surf->space->modelMatrix.ToFloatPtr(), backEnd.viewDef->renderView.vieworg, localViewer );
-				newStage->megaTexture->BindForViewOrigin( localViewer );
-			}
-
-			for ( int i = 0 ; i < newStage->numVertexParms ; i++ ) {
-				float	parm[4];
-				parm[0] = regs[ newStage->vertexParms[i][0] ];
-				parm[1] = regs[ newStage->vertexParms[i][1] ];
-				parm[2] = regs[ newStage->vertexParms[i][2] ];
-				parm[3] = regs[ newStage->vertexParms[i][3] ];
-				//qglProgramLocalParameter4fvARB( GL_VERTEX_PROGRAM_ARB, i, parm );
-			}
-
-			for ( int i = 0 ; i < newStage->numFragmentProgramImages ; i++ ) {
-				if ( newStage->fragmentProgramImages[i] ) {
-					GL_SelectTexture( i );
-					newStage->fragmentProgramImages[i]->Bind();
-				}
-			}
-			//qglBindProgramARB( GL_FRAGMENT_PROGRAM_ARB, newStage->fragmentProgram );
-			//glEnable( GL_FRAGMENT_PROGRAM_ARB );
-
-			// draw it
-			RB_DrawElementsWithCounters( tri );
-
-			for ( int i = 1 ; i < newStage->numFragmentProgramImages ; i++ ) {
-				if ( newStage->fragmentProgramImages[i] ) {
-					GL_SelectTexture( i );
-					globalImages->BindNull();
-				}
-			}
-			if ( newStage->megaTexture ) {
-				newStage->megaTexture->Unbind();
-			}
-
-			GL_SelectTexture( 0 );
-
-			//glDisable( GL_VERTEX_PROGRAM_ARB );
-			//glDisable( GL_FRAGMENT_PROGRAM_ARB );
-			// Fixme: Hack to get around an apparent bug in ATI drivers.  Should remove as soon as it gets fixed.
-			//qglBindProgramARB( GL_VERTEX_PROGRAM_ARB, 0 );
-
-			glDisableClientState( GL_COLOR_ARRAY );
-			glDisableVertexAttribArray( 9 );
-			glDisableVertexAttribArray( 10 );
-			glDisableClientState( GL_NORMAL_ARRAY );
-			continue;
-		}
-
-		//--------------------------
-		//
-		// old style stages
-		//
-		//--------------------------
-
-		// set the color
-		color[0] = regs[ pStage->color.registers[0] ];
-		color[1] = regs[ pStage->color.registers[1] ];
-		color[2] = regs[ pStage->color.registers[2] ];
-		color[3] = regs[ pStage->color.registers[3] ];
-
-		// skip the entire stage if an add would be black
-		if ( ( pStage->drawStateBits & (GLS_SRCBLEND_BITS|GLS_DSTBLEND_BITS) ) == ( GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE ) 
-			&& color[0] <= 0 && color[1] <= 0 && color[2] <= 0 ) {
-			continue;
-		}
-
-		// skip the entire stage if a blend would be completely transparent
-		if ( ( pStage->drawStateBits & (GLS_SRCBLEND_BITS|GLS_DSTBLEND_BITS) ) == ( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA )
-			&& color[3] <= 0 ) {
-			continue;
-		}
-
-		// select the vertex color source
-		if ( pStage->vertexColor == SVC_IGNORE ) {
-			glColor4fv( color );
-		} else {
-			glColorPointer( 4, GL_UNSIGNED_BYTE, sizeof( idDrawVert ), (void *)&ac->color );
-			glEnableClientState( GL_COLOR_ARRAY );
-
-			if ( pStage->vertexColor == SVC_INVERSE_MODULATE ) {
-				GL_TexEnv( GL_COMBINE );
-				glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE );
-				glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE );
-				glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR );
-				glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR );
-				glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_ONE_MINUS_SRC_COLOR );
-				glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE, 1 );
-			}
-
-			// for vertex color and modulated color, we need to enable a second
-			// texture stage
-			if ( color[0] != 1 || color[1] != 1 || color[2] != 1 || color[3] != 1 ) {
-				GL_SelectTexture( 1 );
-
-				globalImages->whiteImage->Bind();
-				GL_TexEnv( GL_COMBINE );
-
-				glTexEnvfv( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color );
-
-				glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE );
-				glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS );
-				glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_CONSTANT );
-				glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR );
-				glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR );
-				glTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE, 1 );
-
-				glTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE );
-				glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_PREVIOUS );
-				glTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_ALPHA, GL_CONSTANT );
-				glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA );
-				glTexEnvi( GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA );
-				glTexEnvi( GL_TEXTURE_ENV, GL_ALPHA_SCALE, 1 );
-
-				GL_SelectTexture( 0 );
-			}
-		}
-
-		// bind the texture
-		RB_BindVariableStageImage( &pStage->texture, regs );
-
-		// set the state
-		GL_State( pStage->drawStateBits );
-		
-		RB_PrepareStageTexturing( pStage, surf, ac );
-
-		// draw it
-		RB_DrawElementsWithCounters( tri );
-
-		RB_FinishStageTexturing( pStage, surf, ac );
-		
-		if ( pStage->vertexColor != SVC_IGNORE ) {
-			glDisableClientState( GL_COLOR_ARRAY );
-
-			GL_SelectTexture( 1 );
-			GL_TexEnv( GL_MODULATE );
-			globalImages->BindNull();
-			GL_SelectTexture( 0 );
-			GL_TexEnv( GL_MODULATE );
-		}
-	}
-
-	// reset polygon offset
-	if ( shader->TestMaterialFlag(MF_POLYGONOFFSET) ) {
-		glDisable( GL_POLYGON_OFFSET_FILL );
-	}
-	if ( surf->space->weaponDepthHack || surf->space->modelDepthHack != 0.0f ) {
-		RB_LeaveDepthHack();
-	}
-}
 
 /*
 =====================
@@ -1032,15 +713,7 @@ int RB_STD_DrawShaderPasses( drawSurf_t **drawSurfs, int numDrawSurfs ) {
 			break;
 		}
 
-        switch (tr.backEndRenderer) {
-            case BE_ARB2:
-                RB_STD_T_RenderShaderPasses(drawSurfs[i]);
-            break;
-
-            case BE_GL33:
-                RB_GL33_RenderShaderPasses(drawSurfs[i]);
-            break;
-        }
+        RB_GL33_RenderShaderPasses(drawSurfs[i]);
 	}
 
 	GL_Cull( CT_FRONT_SIDED );
@@ -1309,19 +982,24 @@ static void RB_BlendLight( const drawSurf_t *drawSurfs,  const drawSurf_t *drawS
 	lightShader = backEnd.vLight->lightShader;
 	regs = backEnd.vLight->shaderRegisters;
 
+    //#TODO_SK: something here ????
 	// texture 1 will get the falloff texture
 	GL_SelectTexture( 1 );
+#if 0
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	glEnable( GL_TEXTURE_GEN_S );
 	glTexCoord2f( 0, 0.5 );
+#endif
 	backEnd.vLight->falloffImage->Bind();
 
 	// texture 0 will get the projected texture
 	GL_SelectTexture( 0 );
+#if 0
 	glDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	glEnable( GL_TEXTURE_GEN_S );
 	glEnable( GL_TEXTURE_GEN_T );
 	glEnable( GL_TEXTURE_GEN_Q );
+#endif
 
 	for ( i = 0 ; i < lightShader->GetNumStages() ; i++ ) {
 		stage = lightShader->GetStage(i);
@@ -1344,27 +1022,16 @@ static void RB_BlendLight( const drawSurf_t *drawSurfs,  const drawSurf_t *drawS
 		backEnd.lightColor[1] = regs[ stage->color.registers[1] ];
 		backEnd.lightColor[2] = regs[ stage->color.registers[2] ];
 		backEnd.lightColor[3] = regs[ stage->color.registers[3] ];
-		glColor4fv( backEnd.lightColor );
 
 		RB_RenderDrawSurfChainWithFunction( drawSurfs, RB_T_BlendLight );
 		RB_RenderDrawSurfChainWithFunction( drawSurfs2, RB_T_BlendLight );
-
-		if ( stage->texture.hasMatrix ) {
-			GL_SelectTexture( 0 );
-			glMatrixMode( GL_TEXTURE );
-			glLoadIdentity();
-			glMatrixMode( GL_MODELVIEW );
-		}
 	}
 
+    //#NOTE_SK: remove this, redundant if GL33
 	GL_SelectTexture( 1 );
-	glDisable( GL_TEXTURE_GEN_S );
 	globalImages->BindNull();
 
 	GL_SelectTexture( 0 );
-	glDisable( GL_TEXTURE_GEN_S );
-	glDisable( GL_TEXTURE_GEN_T );
-	glDisable( GL_TEXTURE_GEN_Q );
 }
 
 
@@ -1599,6 +1266,8 @@ a floating point value
 ==================
 */
 void RB_STD_LightScale( void ) {
+    //#TODO_SK: replace this with a postprocess !!!
+#if 0
 	float	v, f;
 
 	if ( backEnd.overBright == 1.0f ) {
@@ -1656,6 +1325,7 @@ void RB_STD_LightScale( void ) {
 	glEnable( GL_DEPTH_TEST );
 	glMatrixMode( GL_MODELVIEW );
 	GL_Cull( CT_FRONT_SIDED );
+#endif
 }
 
 //=========================================================================================
@@ -1715,6 +1385,8 @@ void	RB_STD_DrawView( void ) {
 		RB_STD_DrawShaderPasses( drawSurfs+processed, numDrawSurfs-processed );
 	}
 
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
 	RB_RenderDebugTools( drawSurfs, numDrawSurfs );
+#endif
 
 }

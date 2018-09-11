@@ -874,7 +874,6 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
 
     // change the matrix if needed
     if (surf->space != backEnd.currentSpace) {
-        glLoadMatrixf(surf->space->modelViewMatrix.ToFloatPtr());
         backEnd.currentSpace = surf->space;
         //RB_SetProgramEnvironmentSpace();
     }
@@ -1124,15 +1123,16 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
             colorAdd = color;
         } else {
             //#TODO_SK: TODO !!!
-#if 0
+#if 1
             if (pStage->vertexColor == SVC_INVERSE_MODULATE) {
-                GL_TexEnv(GL_COMBINE_ARB);
-                glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE);
-                glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE);
-                glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_PRIMARY_COLOR_ARB);
-                glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_ARB, GL_SRC_COLOR);
-                glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_ARB, GL_ONE_MINUS_SRC_COLOR);
-                glTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1);
+                //GL_TexEnv(GL_COMBINE_ARB);
+                //glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE);
+                //glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE);
+                //glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_PRIMARY_COLOR_ARB);
+                //glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB_ARB, GL_SRC_COLOR);
+                //glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_ARB, GL_ONE_MINUS_SRC_COLOR);
+                //glTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 1);
+                assert(false);
             }
 #endif
 
@@ -1157,18 +1157,6 @@ void RB_GL33_RenderShaderPasses(const drawSurf_t *surf) {
         RB_DrawElementsWithCounters(tri);
 
         //RB_FinishStageTexturing(pStage, surf, ac);
-
-#if 0
-        if (pStage->vertexColor != SVC_IGNORE) {
-            glDisableClientState(GL_COLOR_ARRAY);
-
-            GL_SelectTexture(1);
-            GL_TexEnv(GL_MODULATE);
-            globalImages->BindNull();
-            GL_SelectTexture(0);
-            GL_TexEnv(GL_MODULATE);
-        }
-#endif
     }
 
     // reset polygon offset

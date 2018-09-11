@@ -30,6 +30,9 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "tr_local.h"
+
+#ifndef DISABLE_RENDER_DEBUG_TOOLS
+
 #include "simplex.h"	// line font definition
 
 #define MAX_DEBUG_LINES			16384
@@ -125,8 +128,8 @@ RB_SimpleSurfaceSetup
 void RB_SimpleSurfaceSetup( const drawSurf_t *drawSurf ) {
 	// change the matrix if needed
 	if ( drawSurf->space != backEnd.currentSpace ) {
-		glLoadMatrixf( drawSurf->space->modelViewMatrix.ToFloatPtr() );
-		backEnd.currentSpace = drawSurf->space;
+        //#TODO_SK: upload drawSurf->space->modelViewMatrix ???
+        backEnd.currentSpace = drawSurf->space;
 	}
 
 	// change the scissor if needed
@@ -146,7 +149,7 @@ RB_SimpleWorldSetup
 */
 void RB_SimpleWorldSetup( void ) {
 	backEnd.currentSpace = &backEnd.viewDef->worldSpace;
-	glLoadMatrixf( backEnd.viewDef->worldSpace.modelViewMatrix.ToFloatPtr() );
+    //#TODO_SK: upload backEnd.viewDef->worldSpace.modelViewMatrix ???
 
 	backEnd.currentScissor = backEnd.viewDef->scissor;
 	glScissor( backEnd.viewDef->viewport.x1 + backEnd.currentScissor.x1, 
@@ -2383,3 +2386,5 @@ void RB_ShutdownDebugTools( void ) {
 		rb_debugPolygons[i].winding.Clear();
 	}
 }
+
+#endif // DISABLE_RENDER_DEBUG_TOOLS
